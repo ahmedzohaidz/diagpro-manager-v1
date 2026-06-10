@@ -9,6 +9,13 @@ type Filter = ServiceCategory | typeof ALL;
 
 const FILTERS: Filter[] = [ALL, ...SERVICE_CATEGORIES];
 
+const WHY_US = [
+  { icon: "⏱️", title: "سرعة في الإنجاز", desc: "إنجاز سريع بدون تأخير أو انتظار" },
+  { icon: "🛡️", title: "ضمان على الخدمة", desc: "ضمان حقيقي على جميع الخدمات" },
+  { icon: "🧰", title: "أحدث الأجهزة", desc: "معدات حديثة بدقة عالية" },
+  { icon: "⭐", title: "خبرة عالية", desc: "فنيون متخصصون وذوو خبرة طويلة" },
+];
+
 export default function ServicesPage() {
   const [filter, setFilter] = useState<Filter>(ALL);
 
@@ -54,7 +61,10 @@ export default function ServicesPage() {
             className="flex flex-col rounded-xl border border-white/10 bg-[#18181b] p-4"
           >
             <div className="flex items-start gap-3">
-              <span className="text-2xl" aria-hidden>
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand/10 text-2xl"
+                aria-hidden
+              >
                 {service.icon}
               </span>
               <div>
@@ -72,6 +82,38 @@ export default function ServicesPage() {
           </div>
         ))}
       </div>
+
+      {/* Why our services are different */}
+      <section>
+        <div
+          className="mb-3 h-px w-full bg-gradient-to-l from-brand/50 via-brand/10 to-transparent"
+          aria-hidden
+        />
+        <h2 className="mb-3 text-lg font-extrabold">
+          لماذا خدماتنا مختلفة؟
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {WHY_US.map((item) => (
+            <div
+              key={item.title}
+              className="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-[#18181b] p-4 text-center"
+            >
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-xl"
+                aria-hidden
+              >
+                {item.icon}
+              </span>
+              <span className="text-sm font-extrabold text-brand">
+                {item.title}
+              </span>
+              <span className="text-xs leading-relaxed text-white/60">
+                {item.desc}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
