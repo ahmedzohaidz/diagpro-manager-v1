@@ -92,6 +92,35 @@ export function whatsappCustomerArrived(_booking: Booking): string {
   return buildWhatsAppUrl(message);
 }
 
+/** F) Booking/appointment confirmation with full details (Phase 16). */
+export function whatsappBookingAppointmentDetails(booking: Booking): string {
+  const message = [
+    "حياك الله، تم استلام طلب فحص سيارتك.",
+    `السيارة: ${carLabel(booking.carMake, booking.carModel, booking.carYear)}.`,
+    `المشكلة: ${booking.problemDescription}.`,
+    `الموعد المقترح: ${appointmentLabel(
+      booking.preferredDate,
+      booking.preferredTime
+    )}.`,
+    "التشخيص يحدد سبب المشكلة قبل أي إصلاح أو تغيير قطع.",
+  ].join(" ");
+  return buildWhatsAppUrl(message);
+}
+
+/** G) Request additional details / dashboard photo (Phase 16). */
+export function whatsappRequestDetailsWithImage(_booking: Booking): string {
+  const message =
+    "حياك الله، وصلنا طلب الحجز ونحتاج تفاصيل إضافية عن المشكلة أو صورة للطبلون إن أمكن حتى نجهز الفني المناسب.";
+  return buildWhatsAppUrl(message);
+}
+
+/** H) No appointment available / apology (Phase 16). */
+export function whatsappNoAvailability(_booking: Booking): string {
+  const message =
+    "حياك الله، نعتذر حاليًا لا يوجد موعد مناسب في الوقت المطلوب. نقدر نقترح عليك أقرب موعد متاح.";
+  return buildWhatsAppUrl(message);
+}
+
 // ---------------------------------------------------------------------------
 // Work order messages
 // ---------------------------------------------------------------------------

@@ -7,50 +7,47 @@ import { Input } from "@/components/ui/Input";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Detail } from "@/components/ui/Detail";
 import { DemoDataControls } from "@/components/admin/DemoDataControls";
+import { BookingDetailsDrawer } from "@/components/admin/BookingDetailsDrawer";
 import { bookingStatusLabels, type BookingStatus } from "@/lib/statuses";
 import { bookingRepository } from "@/lib/bookings/bookingRepository";
+import { statusLogRepository } from "@/lib/bookings/statusLogRepository";
 import { workOrderRepository } from "@/lib/work-orders/workOrderRepository";
-import {
-  whatsappAppointmentConfirmation,
-  whatsappMissingData,
-  whatsappAppointmentReminder,
-  whatsappCustomerArrived,
-} from "@/lib/whatsapp/whatsappMessages";
-import type { Booking } from "@/lib/bookings/types";
+import type { Booking, BookingStatusLog } from "@/lib/bookings/types";
 import {
   bookingStatusTone,
   priorityLabel,
   priorityTone,
   formatDateTime,
+  yesNoLabel,
+  drivableTone,
+  checkEngineTone,
   ACTION_LABELS,
   BTN_NEUTRAL,
   BTN_PRIMARY,
-  BTN_WHATSAPP,
 } from "@/lib/ui/display";
 
-// Quick status actions available on each booking card.
+// Quick status actions available directly on each booking card. The full set
+// of status transitions lives in the details drawer.
 const quickActions: { status: BookingStatus; label: string }[] = [
-  { status: "pending_review", label: "بانتظار المراجعة" },
   { status: "confirmed", label: ACTION_LABELS.confirmAppointment },
-  { status: "arrived", label: ACTION_LABELS.markArrived },
-  { status: "cancelled", label: "إلغاء" },
+  { status: "cancelled", label: ACTION_LABELS.rejectBooking },
 ];
 
 // A booking can be converted to a work order only from these statuses.
 const CONVERTIBLE_STATUSES: BookingStatus[] = ["confirmed", "arrived"];
 
-// WhatsApp message actions available per booking (prepared links only).
-const whatsappBookingActions: {
-  label: string;
-  build: (booking: Booking) => string;
-}[] = [
-  { label: ACTION_LABELS.sendConfirmation, build: whatsappAppointmentConfirmation },
-  { label: ACTION_LABELS.requestMissingData, build: whatsappMissingData },
-  { label: ACTION_LABELS.sendReminder, build: whatsappAppointmentReminder },
-  { label: ACTION_LABELS.customerArrivedMessage, build: whatsappCustomerArrived },
-];
-
 type Notice = { type: "success" | "error"; text: string };
+type DateFilter = "all" | "today";
+
+function isToday(iso: string): boolean {
+  const d = new Date(iso);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -62,7 +59,12 @@ export default function AdminBookingsPage() {
   const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "normal">(
     "all"
   );
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [search, setSearch] = useState("");
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [statusLogs, setStatusLogs] = useState<BookingStatusLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -81,11 +83,37 @@ export default function AdminBookingsPage() {
     load();
   }, []);
 
+  async function loadStatusLogs(bookingId: string) {
+    setLogsLoading(true);
+    try {
+      const logs = await statusLogRepository.list(bookingId);
+      setStatusLogs(logs);
+    } finally {
+      setLogsLoading(false);
+    }
+  }
+
+  function openDetails(booking: Booking) {
+    setSelectedId(booking.id);
+    setStatusLogs([]);
+    void loadStatusLogs(booking.id);
+  }
+
+  function closeDetails() {
+    setSelectedId(null);
+    setStatusLogs([]);
+  }
+
   async function handleStatusChange(id: string, status: BookingStatus) {
     setNotice(null);
+    const previous = bookings.find((b) => b.id === id);
     try {
       await bookingRepository.updateStatus(id, status);
+      await statusLogRepository.add(id, previous?.status ?? null, status);
       await load();
+      if (selectedId === id) {
+        await loadStatusLogs(id);
+      }
     } catch {
       setError("تعذّر تحديث حالة الحجز.");
     }
@@ -128,13 +156,19 @@ export default function AdminBookingsPage() {
     return bookings.filter((b) => {
       if (statusFilter !== "all" && b.status !== statusFilter) return false;
       if (priorityFilter !== "all" && b.priority !== priorityFilter) return false;
+      if (dateFilter === "today" && !isToday(b.createdAt)) return false;
       if (term) {
-        const haystack = `${b.customerFullName} ${b.phone}`.toLowerCase();
+        const haystack = `${b.customerFullName} ${b.phone} ${b.carMake} ${b.carModel} ${b.plateNumber ?? ""}`.toLowerCase();
         if (!haystack.includes(term)) return false;
       }
       return true;
     });
-  }, [bookings, statusFilter, priorityFilter, search]);
+  }, [bookings, statusFilter, priorityFilter, dateFilter, search]);
+
+  const selectedBooking = useMemo(
+    () => bookings.find((b) => b.id === selectedId) ?? null,
+    [bookings, selectedId]
+  );
 
   return (
     <div className="space-y-6">
@@ -152,7 +186,7 @@ export default function AdminBookingsPage() {
 
       {/* Filters */}
       <Card>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="statusFilter" className="text-sm font-bold text-ink">
               حالة الحجز
@@ -192,9 +226,24 @@ export default function AdminBookingsPage() {
             </select>
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="dateFilter" className="text-sm font-bold text-ink">
+              التاريخ
+            </label>
+            <select
+              id="dateFilter"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as DateFilter)}
+              className="w-full rounded-md border border-ink/20 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink focus:ring-2 focus:ring-brand"
+            >
+              <option value="all">كل التواريخ</option>
+              <option value="today">طلبات اليوم</option>
+            </select>
+          </div>
+
           <Input
             id="search"
-            label="بحث (الاسم أو الجوال)"
+            label="بحث (الاسم، الجوال، السيارة، اللوحة)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="اكتب اسم العميل أو رقم الجوال..."
@@ -251,9 +300,21 @@ export default function AdminBookingsPage() {
               booking={b}
               onStatusChange={handleStatusChange}
               onConvert={handleConvert}
+              onOpenDetails={openDetails}
             />
           ))}
         </div>
+      )}
+
+      {selectedBooking && (
+        <BookingDetailsDrawer
+          booking={selectedBooking}
+          statusLogs={statusLogs}
+          logsLoading={logsLoading}
+          onClose={closeDetails}
+          onStatusChange={handleStatusChange}
+          onConvert={handleConvert}
+        />
       )}
     </div>
   );
@@ -263,14 +324,22 @@ function BookingCard({
   booking,
   onStatusChange,
   onConvert,
+  onOpenDetails,
 }: {
   booking: Booking;
   onStatusChange: (id: string, status: BookingStatus) => void;
   onConvert: (booking: Booking) => void;
+  onOpenDetails: (booking: Booking) => void;
 }) {
   const canConvert = CONVERTIBLE_STATUSES.includes(booking.status);
+  const isNew = booking.status === "new_request";
+
   return (
-    <Card>
+    <Card
+      className={
+        isNew ? "border-2 border-brand ring-1 ring-brand/40" : undefined
+      }
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="break-words text-lg font-bold text-ink">
@@ -281,6 +350,7 @@ function BookingCard({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {isNew && <StatusBadge label="جديد" tone="brand" />}
           <StatusBadge
             label={bookingStatusLabels[booking.status]}
             tone={bookingStatusTone[booking.status]}
@@ -296,51 +366,55 @@ function BookingCard({
         <Detail label="السيارة">
           {booking.carMake} {booking.carModel} {booking.carYear}
         </Detail>
+        <Detail label="رقم اللوحة">{booking.plateNumber || "غير محدد"}</Detail>
+        <Detail label="السيارة تمشي؟">
+          <StatusBadge
+            label={yesNoLabel(booking.isDrivable)}
+            tone={drivableTone(booking.isDrivable)}
+          />
+        </Detail>
+        <Detail label="لمبة فحص المكينة؟">
+          <StatusBadge
+            label={yesNoLabel(booking.hasCheckEngineLight)}
+            tone={checkEngineTone(booking.hasCheckEngineLight)}
+          />
+        </Detail>
         <Detail label="الموعد المفضل">
           {booking.preferredDate} - {booking.preferredTime}
         </Detail>
-        <Detail label="المشكلة">{booking.problemDescription}</Detail>
         <Detail label="تاريخ الإنشاء">{formatDateTime(booking.createdAt)}</Detail>
+        <Detail label="المشكلة">{booking.problemDescription}</Detail>
+        {booking.notes && <Detail label="ملاحظات">{booking.notes}</Detail>}
       </dl>
 
-      <div className="mt-4 space-y-3 border-t border-ink/10 pt-4">
-        <div className="flex flex-wrap gap-2">
-          {quickActions.map((action) => (
-            <button
-              key={action.status}
-              type="button"
-              onClick={() => onStatusChange(booking.id, action.status)}
-              disabled={booking.status === action.status}
-              className={BTN_NEUTRAL}
-            >
-              {action.label}
-            </button>
-          ))}
-          {canConvert && (
-            <button
-              type="button"
-              onClick={() => onConvert(booking)}
-              className={BTN_PRIMARY}
-            >
-              {ACTION_LABELS.convertToWorkOrder}
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-ink-soft">رسائل واتساب:</span>
-          {whatsappBookingActions.map((action) => (
-            <a
-              key={action.label}
-              href={action.build(booking)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={BTN_WHATSAPP}
-            >
-              {action.label}
-            </a>
-          ))}
-        </div>
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-4">
+        <button
+          type="button"
+          onClick={() => onOpenDetails(booking)}
+          className={BTN_PRIMARY}
+        >
+          {ACTION_LABELS.viewDetails}
+        </button>
+        {quickActions.map((action) => (
+          <button
+            key={action.status}
+            type="button"
+            onClick={() => onStatusChange(booking.id, action.status)}
+            disabled={booking.status === action.status}
+            className={BTN_NEUTRAL}
+          >
+            {action.label}
+          </button>
+        ))}
+        {canConvert && (
+          <button
+            type="button"
+            onClick={() => onConvert(booking)}
+            className={BTN_NEUTRAL}
+          >
+            {ACTION_LABELS.convertToWorkOrder}
+          </button>
+        )}
       </div>
     </Card>
   );

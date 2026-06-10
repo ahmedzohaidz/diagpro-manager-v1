@@ -46,6 +46,16 @@ export interface BookingRepository {
   updateStatus(id: string, status: BookingStatus): Promise<Booking>;
 }
 
+/** A single entry in a booking's status change history (Phase 16). */
+export interface BookingStatusLog {
+  id: string;
+  bookingId: string;
+  oldStatus: BookingStatus | null;
+  newStatus: BookingStatus;
+  note?: string;
+  createdAt: string;
+}
+
 /**
  * Business rule (CLAUDE.md): a booking is higher priority when the car cannot
  * be driven or has a check engine light on.

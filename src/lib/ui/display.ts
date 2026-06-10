@@ -59,13 +59,53 @@ export const ACTION_LABELS = {
   confirmAppointment: "تأكيد الموعد",
   markArrived: "تسجيل وصول العميل",
   convertToWorkOrder: "تحويل إلى أمر عمل",
+  suggestAppointment: "اقتراح موعد",
+  markContacted: "تم التواصل",
+  requestDetails: "طلب تفاصيل",
+  rejectBooking: "إلغاء / رفض",
+  backToReview: "بانتظار المراجعة",
+  viewDetails: "عرض التفاصيل",
   // WhatsApp message actions
   openWhatsApp: "فتح واتساب",
   requestMissingData: "طلب بيانات ناقصة",
   sendConfirmation: "إرسال تأكيد الموعد",
   sendReminder: "إرسال تذكير",
   customerArrivedMessage: "إشعار وصول السيارة",
+  sendAppointmentDetails: "رسالة تأكيد الفحص",
+  sendDetailsRequest: "طلب تفاصيل/صورة",
+  sendNoAvailability: "رسالة اعتذار/عدم توفر",
 } as const;
+
+/**
+ * Booking management statuses for Phase 16, mapped to the existing
+ * `BookingStatus` enum (no schema changes). Local Arabic labels here
+ * differ from `bookingStatusLabels` for statuses that are reused for a
+ * different operational meaning in the admin bookings workflow.
+ */
+export const bookingManagementStatusLabels: Record<BookingStatus, string> = {
+  new_request: "طلب جديد",
+  pending_review: "بانتظار مراجعة الإدارة",
+  appointment_suggested: "موعد مقترح",
+  confirmed: "موعد مؤكد",
+  reminder_sent: "تم التواصل",
+  missing_data: "يحتاج تفاصيل",
+  arrived: "وصل العميل",
+  converted_to_work_order: "تحول إلى أمر عمل",
+  cancelled: "ملغي / مرفوض",
+  no_show: "لم يحضر",
+};
+
+export function yesNoLabel(value: boolean): string {
+  return value ? "نعم" : "لا";
+}
+
+export function drivableTone(isDrivable: boolean): BadgeTone {
+  return isDrivable ? "success" : "danger";
+}
+
+export function checkEngineTone(hasLight: boolean): BadgeTone {
+  return hasLight ? "danger" : "success";
+}
 
 /** Shared button class strings to keep buttons visually consistent. */
 export const BTN_NEUTRAL =
