@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { bookingRepository } from "@/lib/bookings/bookingRepository";
-import { buildWhatsAppLink } from "@/lib/bookings/whatsapp";
+import { buildGeneralWhatsAppLink } from "@/lib/bookings/whatsapp";
 import type { Booking, BookingInput } from "@/lib/bookings/types";
 
 type BooleanField = "isDrivable" | "hasCheckEngineLight";
@@ -13,16 +12,47 @@ type BooleanField = "isDrivable" | "hasCheckEngineLight";
 interface ServiceOption {
   id: string;
   label: string;
+  description: string;
   icon: string;
 }
 
 const SERVICES: ServiceOption[] = [
-  { id: "engine_light", label: "فحص لمبة المكينة", icon: "🚨" },
-  { id: "electrical", label: "كهرباء سيارات", icon: "⚡" },
-  { id: "ac", label: "فحص مكيف", icon: "❄️" },
-  { id: "transmission", label: "فحص قير", icon: "⚙️" },
-  { id: "programming", label: "برمجة / إعادة تعلم", icon: "💻" },
-  { id: "full_inspection", label: "فحص شامل", icon: "🔍" },
+  {
+    id: "engine_light",
+    label: "فحص لمبة المكينة",
+    description: "تشخيص أسباب إضاءة لمبة فحص المحرك",
+    icon: "🚨",
+  },
+  {
+    id: "electrical",
+    label: "كهرباء سيارات",
+    description: "تشخيص وإصلاح أعطال الكهرباء",
+    icon: "⚡",
+  },
+  {
+    id: "ac",
+    label: "فحص مكيف",
+    description: "فحص أداء وتبريد نظام التكييف",
+    icon: "❄️",
+  },
+  {
+    id: "transmission",
+    label: "فحص قير",
+    description: "فحص أداء ناقل الحركة وأعطاله",
+    icon: "⚙️",
+  },
+  {
+    id: "programming",
+    label: "برمجة / إعادة تعلم",
+    description: "برمجة وحدات التحكم والمفاتيح",
+    icon: "💻",
+  },
+  {
+    id: "full_inspection",
+    label: "فحص شامل",
+    description: "فحص كامل لجميع أنظمة السيارة",
+    icon: "🔍",
+  },
 ];
 
 interface FormState {
@@ -69,14 +99,17 @@ const CAR_YEARS: string[] = Array.from(
 // (spaces and dashes are ignored).
 const SAUDI_MOBILE_REGEX = /^(\+?966|0)?5\d{8}$/;
 
-// Shared classes for bigger, easier-to-tap fields (also keeps inputs at
-// 16px on iOS so Safari doesn't zoom in on focus).
-const FIELD_CLASS =
-  "text-base py-3 [font-size:16px] sm:[font-size:0.875rem]";
-const TEXTAREA_CLASS =
-  "mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-3 text-base outline-none transition-colors placeholder:text-ink/40 focus:border-ink focus:ring-2 focus:ring-brand [font-size:16px] sm:text-sm sm:[font-size:0.875rem]";
-const SELECT_CLASS =
-  "mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-3 text-base text-ink outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-brand [font-size:16px] sm:text-sm sm:[font-size:0.875rem]";
+const SUCCESS_WHATSAPP_MESSAGE =
+  "السلام عليكم، أرسلت طلب حجز من الموقع. أريد تأكيد أقرب موعد مناسب لفحص السيارة.";
+
+// Shared classes for dark, big, easy-to-tap fields (also keeps inputs at 16px
+// on iOS so Safari doesn't zoom in on focus).
+const LABEL_CLASS = "text-sm font-bold text-white/80";
+const INPUT_CLASS =
+  "mt-1.5 w-full rounded-md border border-white/10 bg-[#18181b] px-3 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand focus:ring-2 focus:ring-brand [font-size:16px] sm:text-sm sm:[font-size:0.875rem]";
+const TEXTAREA_CLASS = `${INPUT_CLASS} resize-none`;
+const SELECT_CLASS = `${INPUT_CLASS} [color-scheme:dark]`;
+const DATE_TIME_CLASS = `${INPUT_CLASS} [color-scheme:dark]`;
 
 export default function BookPage() {
   const [form, setForm] = useState<FormState>(initialForm);
@@ -132,6 +165,7 @@ export default function BookPage() {
 
   async function handleSubmit(e: React.FormEvent | React.MouseEvent) {
     e.preventDefault();
+    if (loading) return;
     setSubmitError(null);
 
     const validationErrors = validate();
@@ -174,12 +208,8 @@ export default function BookPage() {
 
       const booking = await bookingRepository.create(input);
       setSavedBooking(booking);
-    } catch (err) {
-      setSubmitError(
-        err instanceof Error
-          ? err.message
-          : "تعذّر إرسال الطلب، تحقق من الاتصال بالإنترنت وحاول مرة أخرى."
-      );
+    } catch {
+      setSubmitError("تعذر إرسال الطلب. تأكد من البيانات أو حاول مرة أخرى.");
     } finally {
       setLoading(false);
     }
@@ -194,77 +224,132 @@ export default function BookPage() {
 
   // ---- Success view -----------------------------------------------------
   if (savedBooking) {
-    const whatsappLink = buildWhatsAppLink(savedBooking);
+    const selectedService = SERVICES.find(
+      (s) => s.id === form.selectedService
+    );
+    const whatsappMessage = [
+      SUCCESS_WHATSAPP_MESSAGE,
+      selectedService ? `الخدمة: ${selectedService.label}` : null,
+      `السيارة: ${savedBooking.carMake} ${savedBooking.carModel} - ${savedBooking.carYear}`,
+      `المشكلة: ${savedBooking.problemDescription}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const whatsappLink = buildGeneralWhatsAppLink(whatsappMessage);
+
     return (
-      <div className="space-y-6 pb-6">
-        <header>
-          <h1 className="text-2xl font-extrabold text-ink">حجز موعد</h1>
-        </header>
+      <div className="space-y-6 rounded-2xl border border-white/10 bg-[#0d0d0f] p-4 text-white sm:p-6">
+        <div className="rounded-xl border-2 border-brand bg-gradient-to-br from-brand/15 to-transparent p-5">
+          <span className="inline-flex w-fit items-center rounded-full bg-brand px-3 py-1 text-sm font-bold text-ink">
+            تم استلام طلبك بنجاح
+          </span>
 
-        <Card className="border-2 border-brand">
-          <div className="flex flex-col gap-4">
-            <span className="inline-flex w-fit items-center rounded-full bg-brand px-3 py-1 text-sm font-bold text-ink">
-              تم الإرسال بنجاح
-            </span>
+          <ul className="mt-4 space-y-3">
+            <li className="flex items-start gap-2 text-sm leading-relaxed text-white/80">
+              <span aria-hidden>📅</span>
+              <span>سيتم مراجعة طلبك وتحديد أقرب موعد مناسب.</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm leading-relaxed text-white/80">
+              <span aria-hidden>✅</span>
+              <span>سيصلك تأكيد الموعد عبر واتساب.</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm leading-relaxed text-white/80">
+              <span aria-hidden>🚗</span>
+              <span>
+                عند وصولك سيكون موظف الاستقبال على علم ببيانات سيارتك
+                ومشكلتك مسبقًا.
+              </span>
+            </li>
+          </ul>
+        </div>
 
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-base font-bold text-ink">
-                <span aria-hidden>✅</span>
-                <span>تم استلام طلب الحجز الخاص بك.</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm text-ink-soft">
-                <span aria-hidden>📅</span>
-                <span>سيتم مراجعة طلبك وتحديد أقرب موعد مناسب لك.</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm text-ink-soft">
-                <span aria-hidden>🚗</span>
-                <span>
-                  عند وصولك، سيكون موظف الاستقبال على علم ببيانات سيارتك
-                  ومشكلتك مسبقًا.
-                </span>
-              </li>
-            </ul>
-
-            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Button variant="secondary" className="w-full py-3.5 text-base sm:w-auto">
-                  تأكيد عبر واتساب
-                </Button>
-              </a>
-              <Button
-                variant="outline"
-                onClick={resetForm}
-                type="button"
-                className="w-full py-3.5 text-base sm:w-auto"
-              >
-                حجز موعد جديد
-              </Button>
+        {/* Booking summary */}
+        <div className="rounded-xl border border-white/10 bg-[#18181b] p-4">
+          <h2 className="text-sm font-extrabold text-white/80">ملخص الطلب</h2>
+          <dl className="mt-3 space-y-2 text-sm">
+            {selectedService && (
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-white/50">الخدمة</dt>
+                <dd className="font-bold">
+                  {selectedService.icon} {selectedService.label}
+                </dd>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-white/50">السيارة</dt>
+              <dd className="font-bold">
+                {savedBooking.carMake} {savedBooking.carModel}{" "}
+                {savedBooking.carYear}
+              </dd>
             </div>
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-white/50">المشكلة</dt>
+              <dd className="max-w-[65%] text-right font-bold leading-relaxed">
+                {savedBooking.problemDescription}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <Button className="w-full py-3.5 text-base">
+              تأكيد عبر واتساب
+            </Button>
+          </a>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/" className="block flex-1">
+              <Button variant="secondary" className="w-full py-3.5 text-base">
+                العودة للرئيسية
+              </Button>
+            </Link>
+            <Link href="/services" className="block flex-1">
+              <Button variant="outline" className="w-full py-3.5 text-base">
+                استعراض الخدمات
+              </Button>
+            </Link>
           </div>
-        </Card>
+          <Button
+            variant="outline"
+            onClick={resetForm}
+            type="button"
+            className="w-full py-3.5 text-base"
+          >
+            حجز موعد جديد
+          </Button>
+        </div>
       </div>
     );
   }
 
   // ---- Form view --------------------------------------------------------
   return (
-    <div className="space-y-6 pb-28">
-      <header>
-        <h1 className="text-2xl font-extrabold text-ink">حجز موعد</h1>
-        <p className="mt-1 text-ink-soft">
-          عبّئ بيانات الحجز وسنراجع أقرب موعد مناسب ونتواصل معك عبر واتساب.
+    <div className="space-y-6 rounded-2xl border border-white/10 bg-[#0d0d0f] p-4 pb-[calc(9rem+env(safe-area-inset-bottom))] text-white sm:p-6 md:pb-28">
+      {/* Hero */}
+      <header className="rounded-xl border border-white/10 bg-gradient-to-br from-[#1c1c1f] to-[#0d0d0f] p-4 sm:p-5">
+        <h1 className="text-xl font-extrabold sm:text-2xl">
+          احجز موعد فحص سيارتك
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-white/70">
+          املأ البيانات وسيتم مراجعة أقرب موعد مناسب والتواصل معك عبر واتساب.
         </p>
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-brand/30 bg-brand/10 p-3 text-xs leading-relaxed text-brand">
+          <span aria-hidden>✅</span>
+          <span>
+            عند وصولك سيكون موظف الاستقبال على علم ببيانات سيارتك ومشكلتك.
+          </span>
+        </div>
       </header>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Service cards */}
-        <Card>
-          <h2 className="mb-3 text-sm font-bold text-ink">
+        <div className="rounded-xl border border-white/10 bg-[#18181b] p-4">
+          <h2 className="mb-3 text-sm font-bold text-white/80">
             ما نوع الخدمة المطلوبة؟ (اختياري)
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -276,72 +361,87 @@ export default function BookPage() {
                   type="button"
                   onClick={() => toggleService(service.id)}
                   aria-pressed={selected}
-                  className={`flex min-h-[88px] flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 text-center text-sm font-bold transition-colors ${
+                  className={`flex min-h-[100px] flex-col items-center justify-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition-colors ${
                     selected
-                      ? "border-ink bg-brand text-ink"
-                      : "border-ink/15 bg-white text-ink-soft hover:border-ink"
+                      ? "border-brand bg-brand text-ink"
+                      : "border-white/10 bg-[#0d0d0f] text-white/70 hover:border-white/30"
                   }`}
                 >
                   <span className="text-2xl" aria-hidden>
                     {service.icon}
                   </span>
-                  <span>{service.label}</span>
+                  <span className="text-sm font-bold">{service.label}</span>
+                  <span
+                    className={`text-[11px] leading-snug ${
+                      selected ? "text-ink/70" : "text-white/50"
+                    }`}
+                  >
+                    {service.description}
+                  </span>
                 </button>
               );
             })}
           </div>
-        </Card>
+        </div>
 
         {/* Customer & vehicle details */}
-        <Card>
+        <div className="rounded-xl border border-white/10 bg-[#18181b] p-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field error={errors.customerFullName}>
-              <Input
+              <label htmlFor="customerFullName" className={LABEL_CLASS}>
+                الاسم الكامل *
+              </label>
+              <input
                 id="customerFullName"
-                label="الاسم الكامل *"
                 value={form.customerFullName}
                 onChange={(e) => update("customerFullName", e.target.value)}
                 placeholder="مثال: أحمد محمد"
-                className={FIELD_CLASS}
+                className={INPUT_CLASS}
               />
             </Field>
 
             <Field error={errors.phone}>
-              <Input
+              <label htmlFor="phone" className={LABEL_CLASS}>
+                رقم الجوال *
+              </label>
+              <input
                 id="phone"
-                label="رقم الجوال *"
                 inputMode="tel"
                 value={form.phone}
                 onChange={(e) => update("phone", e.target.value)}
                 placeholder="مثال: 05XXXXXXXX"
-                className={FIELD_CLASS}
+                className={INPUT_CLASS}
               />
             </Field>
 
             <Field error={errors.carMake}>
-              <Input
+              <label htmlFor="carMake" className={LABEL_CLASS}>
+                نوع السيارة *
+              </label>
+              <input
                 id="carMake"
-                label="نوع السيارة *"
                 value={form.carMake}
                 onChange={(e) => update("carMake", e.target.value)}
                 placeholder="مثال: تويوتا"
-                className={FIELD_CLASS}
+                className={INPUT_CLASS}
               />
             </Field>
 
             <Field error={errors.carModel}>
-              <Input
+              <label htmlFor="carModel" className={LABEL_CLASS}>
+                الموديل *
+              </label>
+              <input
                 id="carModel"
-                label="الموديل *"
                 value={form.carModel}
                 onChange={(e) => update("carModel", e.target.value)}
                 placeholder="مثال: كامري"
-                className={FIELD_CLASS}
+                className={INPUT_CLASS}
               />
             </Field>
 
             <Field error={errors.carYear}>
-              <label htmlFor="carYear" className="text-sm font-bold text-ink">
+              <label htmlFor="carYear" className={LABEL_CLASS}>
                 سنة الصنع *
               </label>
               <select
@@ -360,45 +460,48 @@ export default function BookPage() {
             </Field>
 
             <Field>
-              <Input
+              <label htmlFor="plateNumber" className={LABEL_CLASS}>
+                رقم اللوحة (اختياري)
+              </label>
+              <input
                 id="plateNumber"
-                label="رقم اللوحة (اختياري)"
                 value={form.plateNumber}
                 onChange={(e) => update("plateNumber", e.target.value)}
                 placeholder="مثال: أ ب ج 1234"
-                className={FIELD_CLASS}
+                className={INPUT_CLASS}
               />
             </Field>
 
             <Field error={errors.preferredDate}>
-              <Input
+              <label htmlFor="preferredDate" className={LABEL_CLASS}>
+                التاريخ المفضل *
+              </label>
+              <input
                 id="preferredDate"
-                label="التاريخ المفضل *"
                 type="date"
                 value={form.preferredDate}
                 onChange={(e) => update("preferredDate", e.target.value)}
-                className={FIELD_CLASS}
+                className={DATE_TIME_CLASS}
               />
             </Field>
 
             <Field error={errors.preferredTime}>
-              <Input
+              <label htmlFor="preferredTime" className={LABEL_CLASS}>
+                الوقت المفضل *
+              </label>
+              <input
                 id="preferredTime"
-                label="الوقت المفضل *"
                 type="time"
                 value={form.preferredTime}
                 onChange={(e) => update("preferredTime", e.target.value)}
-                className={FIELD_CLASS}
+                className={DATE_TIME_CLASS}
               />
             </Field>
           </div>
 
           <div className="mt-4">
             <Field error={errors.problemDescription}>
-              <label
-                htmlFor="problemDescription"
-                className="text-sm font-bold text-ink"
-              >
+              <label htmlFor="problemDescription" className={LABEL_CLASS}>
                 وصف المشكلة *
               </label>
               <textarea
@@ -431,7 +534,7 @@ export default function BookPage() {
 
           <div className="mt-4">
             <Field>
-              <label htmlFor="notes" className="text-sm font-bold text-ink">
+              <label htmlFor="notes" className={LABEL_CLASS}>
                 ملاحظات (اختياري)
               </label>
               <textarea
@@ -448,24 +551,31 @@ export default function BookPage() {
           {submitError && (
             <p
               role="alert"
-              className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-700"
+              className="mt-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-3 text-sm font-bold text-red-300"
             >
               {submitError}
             </p>
           )}
-        </Card>
+        </div>
       </form>
 
-      {/* Sticky submit bar — always reachable on mobile */}
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-ink/10 bg-white/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
+      {/* Sticky submit bar — sits above the bottom nav (which already
+          reserves env(safe-area-inset-bottom)), always reachable */}
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-white/10 bg-[#0d0d0f]/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-[#0d0d0f]/80 md:bottom-0 md:[padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-5xl px-1">
           <Button
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full py-4 text-base"
+            className="flex w-full items-center justify-center gap-2 py-4 text-base"
           >
-            {loading ? "جارٍ الإرسال..." : "إرسال طلب الحجز"}
+            {loading && (
+              <span
+                aria-hidden
+                className="h-4 w-4 animate-spin rounded-full border-2 border-ink/30 border-t-ink"
+              />
+            )}
+            {loading ? "جاري إرسال الطلب..." : "إرسال طلب الحجز"}
           </Button>
         </div>
       </div>
@@ -488,7 +598,7 @@ function Field({
     <div className="flex flex-col">
       {children}
       {error && (
-        <span className="mt-1 text-xs font-bold text-red-600">{error}</span>
+        <span className="mt-1 text-xs font-bold text-red-400">{error}</span>
       )}
     </div>
   );
@@ -509,7 +619,7 @@ function BooleanQuestion({
 }) {
   return (
     <Field error={error}>
-      <span className="text-sm font-bold text-ink">{label}</span>
+      <span className={LABEL_CLASS}>{label}</span>
       <div className="mt-1.5 flex gap-2">
         {[
           { label: "نعم", val: true },
@@ -523,8 +633,8 @@ function BooleanQuestion({
               onClick={() => onChange(opt.val)}
               className={`flex-1 rounded-md border-2 px-5 py-3 text-sm font-bold transition-colors ${
                 selected
-                  ? "border-ink bg-brand text-ink"
-                  : "border-ink/20 bg-white text-ink-soft hover:border-ink"
+                  ? "border-brand bg-brand text-ink"
+                  : "border-white/15 bg-[#0d0d0f] text-white/70 hover:border-white/40"
               }`}
               aria-pressed={selected}
               name={name}
