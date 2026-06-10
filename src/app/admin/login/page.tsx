@@ -52,9 +52,11 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="mb-2 text-2xl font-extrabold text-ink">تسجيل دخول الموظفين</h1>
-      <p className="mb-6 text-ink-soft">
+    <div>
+      <h1 className="mb-2 text-center text-2xl font-extrabold text-white">
+        تسجيل دخول الموظفين
+      </h1>
+      <p className="mb-6 text-center text-white/60">
         هذه المنطقة مخصّصة لموظفي الورشة. الرجاء تسجيل الدخول للمتابعة.
       </p>
 

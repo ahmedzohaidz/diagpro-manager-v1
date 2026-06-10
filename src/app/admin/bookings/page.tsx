@@ -170,19 +170,41 @@ export default function AdminBookingsPage() {
     [bookings, selectedId]
   );
 
+  const stats = useMemo(
+    () => ({
+      total: bookings.length,
+      new: bookings.filter((b) => b.status === "new_request").length,
+      confirmed: bookings.filter((b) => b.status === "confirmed").length,
+      today: bookings.filter((b) => isToday(b.createdAt)).length,
+    }),
+    [bookings]
+  );
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-extrabold text-ink">الحجوزات</h1>
-          <p className="mt-1 text-ink-soft">
+          <h1 className="text-2xl font-extrabold text-white">الحجوزات</h1>
+          <p className="mt-1 text-white/60">
             متابعة طلبات الحجز الإلكترونية وإدارة حالتها.
           </p>
         </div>
-        <Button variant="outline" type="button" onClick={load}>
+        <button
+          type="button"
+          onClick={load}
+          className="rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-bold text-white transition-colors hover:border-brand hover:bg-brand hover:text-ink"
+        >
           تحديث
-        </Button>
+        </button>
       </header>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="إجمالي الحجوزات" value={stats.total} />
+        <StatCard label="طلبات جديدة" value={stats.new} accent />
+        <StatCard label="مواعيد مؤكدة" value={stats.confirmed} />
+        <StatCard label="طلبات اليوم" value={stats.today} />
+      </div>
 
       {/* Filters */}
       <Card>
@@ -266,34 +288,50 @@ export default function AdminBookingsPage() {
       )}
 
       {error && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
           {error}
-        </p>
+        </div>
       )}
 
       {/* Results */}
       {loading ? (
-        <Card>
-          <p className="text-sm text-ink-soft">جارٍ التحميل...</p>
-        </Card>
+        <div className="space-y-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-xl border border-white/10 bg-white/5 p-5"
+            >
+              <div className="h-5 w-40 rounded bg-white/10" />
+              <div className="mt-3 h-4 w-24 rounded bg-white/10" />
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="h-4 w-full rounded bg-white/10" />
+                <div className="h-4 w-full rounded bg-white/10" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : bookings.length === 0 ? (
-        <Card>
-          <div className="py-6 text-center">
-            <p className="text-base font-bold text-ink">لا توجد حجوزات بعد</p>
-            <p className="mt-1 text-sm text-ink-soft">
-              ستظهر الحجوزات هنا عند استلام طلبات جديدة من صفحة الحجز.
-            </p>
+        <div className="rounded-xl border border-dashed border-white/15 bg-white/5 px-4 py-12 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand/15 text-2xl">
+            📭
           </div>
-        </Card>
+          <p className="text-base font-bold text-white">لا توجد حجوزات بعد</p>
+          <p className="mt-1 text-sm text-white/50">
+            ستظهر الحجوزات هنا عند استلام طلبات جديدة من صفحة الحجز.
+          </p>
+        </div>
       ) : filtered.length === 0 ? (
-        <Card>
-          <p className="py-4 text-center text-sm text-ink-soft">
+        <div className="rounded-xl border border-dashed border-white/15 bg-white/5 px-4 py-10 text-center">
+          <p className="text-sm font-bold text-white/70">
             لا توجد نتائج مطابقة للبحث أو التصفية.
           </p>
-        </Card>
+          <p className="mt-1 text-xs text-white/40">
+            جرّب تغيير الفلاتر أو مسح حقل البحث.
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-ink-soft">عدد النتائج: {filtered.length}</p>
+          <p className="text-sm text-white/50">عدد النتائج: {filtered.length}</p>
           {filtered.map((b) => (
             <BookingCard
               key={b.id}
@@ -316,6 +354,35 @@ export default function AdminBookingsPage() {
           onConvert={handleConvert}
         />
       )}
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: number;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border p-4 ${
+        accent
+          ? "border-brand/50 bg-brand/10"
+          : "border-white/10 bg-white/5"
+      }`}
+    >
+      <p className="text-xs font-bold text-white/50">{label}</p>
+      <p
+        className={`mt-1 text-2xl font-extrabold ${
+          accent ? "text-brand" : "text-white"
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

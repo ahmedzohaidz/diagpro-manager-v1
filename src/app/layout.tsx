@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -23,11 +22,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <body className="min-h-screen bg-white font-sans text-ink antialiased">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-5xl px-4 py-8 pb-24 md:pb-8">
-          {children}
-        </main>
-        <BottomNav />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
