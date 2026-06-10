@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Lazy Supabase browser client for DiagPro Manager V1.
@@ -10,6 +11,13 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * The client is created on first use (not at import time) so that local mode
  * and the build never instantiate it with missing config. It is only ever
  * called when NEXT_PUBLIC_DATA_MODE=supabase.
+ *
+ * Phase 14B: this client is session-aware (createBrowserClient from
+ * @supabase/ssr), so it shares the cookie-based session with
+ * src/lib/supabase/authBrowserClient.ts. Authenticated admin requests are sent
+ * as the `authenticated` role (subject to RLS + is_admin()), while requests
+ * from a logged-out visitor (e.g. /book) run as `anon`, which can only call
+ * the public.create_public_booking() RPC.
  *
  * Set these in a local `.env.local` file (see `.env.example`). Never commit
  * real keys.
@@ -29,11 +37,6 @@ export function getSupabaseClient(): SupabaseClient {
     );
   }
 
-  // Pure anon data client: it must NOT adopt the auth session, so data
-  // requests always use the `anon` role (which has the temporary 003 grants).
-  // Auth/session is handled separately in src/lib/supabase/* via @supabase/ssr.
-  client = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  client = createBrowserClient(url, key);
   return client;
 }

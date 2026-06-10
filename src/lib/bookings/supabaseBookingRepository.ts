@@ -78,58 +78,49 @@ function mapRow(row: BookingRow): Booking {
   };
 }
 
+interface PublicBookingRpcRow {
+  id: string;
+  status: BookingStatus;
+  priority: BookingPriority;
+  created_at: string;
+  updated_at: string;
+}
+
 export const supabaseBookingRepository: BookingRepository = {
   async create(input: BookingInput): Promise<Booking> {
     const supabase = getSupabaseClient();
     try {
-      // 1) customer
-      const { data: customer, error: customerError } = await supabase
-        .from("customers")
-        .insert({
-          full_name: input.customerFullName,
-          phone: input.phone,
-          source: "online",
-        })
-        .select("id")
-        .single();
-      if (customerError || !customer) throw customerError ?? new Error("customer");
-
-      // 2) vehicle
       const yearNum = parseInt(input.carYear, 10);
-      const { data: vehicle, error: vehicleError } = await supabase
-        .from("vehicles")
-        .insert({
-          customer_id: customer.id,
-          make: input.carMake,
-          model: input.carModel,
-          year: Number.isFinite(yearNum) ? yearNum : null,
-          plate_number: input.plateNumber ?? null,
-        })
-        .select("id")
-        .single();
-      if (vehicleError || !vehicle) throw vehicleError ?? new Error("vehicle");
-
-      // 3) booking
       const priority = derivePriority(input);
-      const { data: row, error: bookingError } = await supabase
-        .from("bookings")
-        .insert({
-          customer_id: customer.id,
-          vehicle_id: vehicle.id,
-          problem_description: input.problemDescription,
-          is_drivable: input.isDrivable,
-          has_check_engine_light: input.hasCheckEngineLight,
-          preferred_date: input.preferredDate || null,
-          preferred_time: input.preferredTime || null,
-          status: "new_request",
-          priority,
-          notes: input.notes ?? null,
-        })
-        .select(BOOKING_SELECT)
-        .single();
-      if (bookingError || !row) throw bookingError ?? new Error("booking");
 
-      return mapRow(row as unknown as BookingRow);
+      const { data, error } = await supabase
+        .rpc("create_public_booking", {
+          p_customer_full_name: input.customerFullName,
+          p_phone: input.phone,
+          p_car_make: input.carMake,
+          p_car_model: input.carModel,
+          p_car_year: Number.isFinite(yearNum) ? yearNum : null,
+          p_plate_number: input.plateNumber ?? null,
+          p_problem_description: input.problemDescription,
+          p_is_drivable: input.isDrivable,
+          p_has_check_engine_light: input.hasCheckEngineLight,
+          p_preferred_date: input.preferredDate || null,
+          p_preferred_time: input.preferredTime || null,
+          p_priority: priority,
+          p_notes: input.notes ?? null,
+        })
+        .single();
+      if (error || !data) throw error ?? new Error("booking");
+
+      const row = data as unknown as PublicBookingRpcRow;
+      return {
+        ...input,
+        id: row.id,
+        status: row.status,
+        priority: row.priority,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
     } catch {
       throw new Error("تعذّر حفظ الحجز، حاول مرة أخرى.");
     }
