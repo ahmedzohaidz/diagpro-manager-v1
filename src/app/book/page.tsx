@@ -10,6 +10,21 @@ import type { Booking, BookingInput } from "@/lib/bookings/types";
 
 type BooleanField = "isDrivable" | "hasCheckEngineLight";
 
+interface ServiceOption {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+const SERVICES: ServiceOption[] = [
+  { id: "engine_light", label: "فحص لمبة المكينة", icon: "🚨" },
+  { id: "electrical", label: "كهرباء سيارات", icon: "⚡" },
+  { id: "ac", label: "فحص مكيف", icon: "❄️" },
+  { id: "transmission", label: "فحص قير", icon: "⚙️" },
+  { id: "programming", label: "برمجة / إعادة تعلم", icon: "💻" },
+  { id: "full_inspection", label: "فحص شامل", icon: "🔍" },
+];
+
 interface FormState {
   customerFullName: string;
   phone: string;
@@ -17,6 +32,7 @@ interface FormState {
   carModel: string;
   carYear: string;
   plateNumber: string;
+  selectedService: string | null;
   problemDescription: string;
   isDrivable: boolean | null;
   hasCheckEngineLight: boolean | null;
@@ -32,6 +48,7 @@ const initialForm: FormState = {
   carModel: "",
   carYear: "",
   plateNumber: "",
+  selectedService: null,
   problemDescription: "",
   isDrivable: null,
   hasCheckEngineLight: null,
@@ -39,9 +56,6 @@ const initialForm: FormState = {
   preferredTime: "",
   notes: "",
 };
-
-const SUCCESS_MESSAGE =
-  "تم استلام طلب الحجز. سيتم مراجعة أقرب موعد مناسب والتواصل معك عبر واتساب.";
 
 // Car year options (newest first), from next model year down to 1980.
 const CURRENT_YEAR = new Date().getFullYear();
@@ -55,6 +69,15 @@ const CAR_YEARS: string[] = Array.from(
 // (spaces and dashes are ignored).
 const SAUDI_MOBILE_REGEX = /^(\+?966|0)?5\d{8}$/;
 
+// Shared classes for bigger, easier-to-tap fields (also keeps inputs at
+// 16px on iOS so Safari doesn't zoom in on focus).
+const FIELD_CLASS =
+  "text-base py-3 [font-size:16px] sm:[font-size:0.875rem]";
+const TEXTAREA_CLASS =
+  "mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-3 text-base outline-none transition-colors placeholder:text-ink/40 focus:border-ink focus:ring-2 focus:ring-brand [font-size:16px] sm:text-sm sm:[font-size:0.875rem]";
+const SELECT_CLASS =
+  "mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-3 text-base text-ink outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-brand [font-size:16px] sm:text-sm sm:[font-size:0.875rem]";
+
 export default function BookPage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,6 +87,13 @@ export default function BookPage() {
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function toggleService(id: string) {
+    setForm((prev) => ({
+      ...prev,
+      selectedService: prev.selectedService === id ? null : id,
+    }));
   }
 
   function validate(): Record<string, string> {
@@ -100,18 +130,33 @@ export default function BookPage() {
     return next;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent | React.MouseEvent) {
     e.preventDefault();
     setSubmitError(null);
 
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
+      // Scroll the first invalid field into view so the user notices it.
+      const firstField = Object.keys(validationErrors)[0];
+      document
+        .getElementById(firstField)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
     setLoading(true);
     try {
+      const selectedService = SERVICES.find(
+        (s) => s.id === form.selectedService
+      );
+      const notes = [
+        selectedService ? `الخدمة المطلوبة: ${selectedService.label}` : null,
+        form.notes.trim() || null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
       const input: BookingInput = {
         customerFullName: form.customerFullName.trim(),
         phone: form.phone.trim(),
@@ -124,7 +169,7 @@ export default function BookPage() {
         hasCheckEngineLight: form.hasCheckEngineLight === true,
         preferredDate: form.preferredDate,
         preferredTime: form.preferredTime,
-        notes: form.notes.trim() || undefined,
+        notes: notes || undefined,
       };
 
       const booking = await bookingRepository.create(input);
@@ -133,7 +178,7 @@ export default function BookPage() {
       setSubmitError(
         err instanceof Error
           ? err.message
-          : "تعذّر حفظ الحجز، حاول مرة أخرى."
+          : "تعذّر إرسال الطلب، تحقق من الاتصال بالإنترنت وحاول مرة أخرى."
       );
     } finally {
       setLoading(false);
@@ -151,7 +196,7 @@ export default function BookPage() {
   if (savedBooking) {
     const whatsappLink = buildWhatsAppLink(savedBooking);
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 pb-6">
         <header>
           <h1 className="text-2xl font-extrabold text-ink">حجز موعد</h1>
         </header>
@@ -161,15 +206,42 @@ export default function BookPage() {
             <span className="inline-flex w-fit items-center rounded-full bg-brand px-3 py-1 text-sm font-bold text-ink">
               تم الإرسال بنجاح
             </span>
-            <p className="text-base font-bold text-ink">{SUCCESS_MESSAGE}</p>
-            <p className="text-sm text-ink-soft">
-              يمكنك تأكيد الطلب مباشرة عبر واتساب لتسريع التواصل.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary">تأكيد عبر واتساب</Button>
+
+            <ul className="space-y-3">
+              <li className="flex items-start gap-2 text-base font-bold text-ink">
+                <span aria-hidden>✅</span>
+                <span>تم استلام طلب الحجز الخاص بك.</span>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-ink-soft">
+                <span aria-hidden>📅</span>
+                <span>سيتم مراجعة طلبك وتحديد أقرب موعد مناسب لك.</span>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-ink-soft">
+                <span aria-hidden>🚗</span>
+                <span>
+                  عند وصولك، سيكون موظف الاستقبال على علم ببيانات سيارتك
+                  ومشكلتك مسبقًا.
+                </span>
+              </li>
+            </ul>
+
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button variant="secondary" className="w-full py-3.5 text-base sm:w-auto">
+                  تأكيد عبر واتساب
+                </Button>
               </a>
-              <Button variant="outline" onClick={resetForm} type="button">
+              <Button
+                variant="outline"
+                onClick={resetForm}
+                type="button"
+                className="w-full py-3.5 text-base sm:w-auto"
+              >
                 حجز موعد جديد
               </Button>
             </div>
@@ -181,7 +253,7 @@ export default function BookPage() {
 
   // ---- Form view --------------------------------------------------------
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28">
       <header>
         <h1 className="text-2xl font-extrabold text-ink">حجز موعد</h1>
         <p className="mt-1 text-ink-soft">
@@ -189,7 +261,38 @@ export default function BookPage() {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {/* Service cards */}
+        <Card>
+          <h2 className="mb-3 text-sm font-bold text-ink">
+            ما نوع الخدمة المطلوبة؟ (اختياري)
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {SERVICES.map((service) => {
+              const selected = form.selectedService === service.id;
+              return (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => toggleService(service.id)}
+                  aria-pressed={selected}
+                  className={`flex min-h-[88px] flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 text-center text-sm font-bold transition-colors ${
+                    selected
+                      ? "border-ink bg-brand text-ink"
+                      : "border-ink/15 bg-white text-ink-soft hover:border-ink"
+                  }`}
+                >
+                  <span className="text-2xl" aria-hidden>
+                    {service.icon}
+                  </span>
+                  <span>{service.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Customer & vehicle details */}
         <Card>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field error={errors.customerFullName}>
@@ -199,6 +302,7 @@ export default function BookPage() {
                 value={form.customerFullName}
                 onChange={(e) => update("customerFullName", e.target.value)}
                 placeholder="مثال: أحمد محمد"
+                className={FIELD_CLASS}
               />
             </Field>
 
@@ -210,6 +314,7 @@ export default function BookPage() {
                 value={form.phone}
                 onChange={(e) => update("phone", e.target.value)}
                 placeholder="مثال: 05XXXXXXXX"
+                className={FIELD_CLASS}
               />
             </Field>
 
@@ -220,6 +325,7 @@ export default function BookPage() {
                 value={form.carMake}
                 onChange={(e) => update("carMake", e.target.value)}
                 placeholder="مثال: تويوتا"
+                className={FIELD_CLASS}
               />
             </Field>
 
@@ -230,6 +336,7 @@ export default function BookPage() {
                 value={form.carModel}
                 onChange={(e) => update("carModel", e.target.value)}
                 placeholder="مثال: كامري"
+                className={FIELD_CLASS}
               />
             </Field>
 
@@ -241,7 +348,7 @@ export default function BookPage() {
                 id="carYear"
                 value={form.carYear}
                 onChange={(e) => update("carYear", e.target.value)}
-                className="mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-brand"
+                className={SELECT_CLASS}
               >
                 <option value="">اختر السنة</option>
                 {CAR_YEARS.map((year) => (
@@ -259,6 +366,7 @@ export default function BookPage() {
                 value={form.plateNumber}
                 onChange={(e) => update("plateNumber", e.target.value)}
                 placeholder="مثال: أ ب ج 1234"
+                className={FIELD_CLASS}
               />
             </Field>
 
@@ -269,6 +377,7 @@ export default function BookPage() {
                 type="date"
                 value={form.preferredDate}
                 onChange={(e) => update("preferredDate", e.target.value)}
+                className={FIELD_CLASS}
               />
             </Field>
 
@@ -279,6 +388,7 @@ export default function BookPage() {
                 type="time"
                 value={form.preferredTime}
                 onChange={(e) => update("preferredTime", e.target.value)}
+                className={FIELD_CLASS}
               />
             </Field>
           </div>
@@ -297,7 +407,7 @@ export default function BookPage() {
                 onChange={(e) => update("problemDescription", e.target.value)}
                 rows={3}
                 placeholder="اشرح المشكلة بإيجاز..."
-                className="mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-ink/40 focus:border-ink focus:ring-2 focus:ring-brand"
+                className={TEXTAREA_CLASS}
               />
             </Field>
           </div>
@@ -330,24 +440,35 @@ export default function BookPage() {
                 onChange={(e) => update("notes", e.target.value)}
                 rows={2}
                 placeholder="أي معلومات إضافية..."
-                className="mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-ink/40 focus:border-ink focus:ring-2 focus:ring-brand"
+                className={TEXTAREA_CLASS}
               />
             </Field>
           </div>
 
           {submitError && (
-            <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+            <p
+              role="alert"
+              className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-3 text-sm font-bold text-red-700"
+            >
               {submitError}
             </p>
           )}
-
-          <div className="mt-6">
-            <Button type="submit" disabled={loading}>
-              {loading ? "جارٍ الإرسال..." : "إرسال طلب الحجز"}
-            </Button>
-          </div>
         </Card>
       </form>
+
+      {/* Sticky submit bar — always reachable on mobile */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-ink/10 bg-white/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-5xl px-1">
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-4 text-base"
+          >
+            {loading ? "جارٍ الإرسال..." : "إرسال طلب الحجز"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -366,7 +487,9 @@ function Field({
   return (
     <div className="flex flex-col">
       {children}
-      {error && <span className="mt-1 text-xs font-bold text-red-600">{error}</span>}
+      {error && (
+        <span className="mt-1 text-xs font-bold text-red-600">{error}</span>
+      )}
     </div>
   );
 }
@@ -398,7 +521,7 @@ function BooleanQuestion({
               key={opt.label}
               type="button"
               onClick={() => onChange(opt.val)}
-              className={`rounded-md border-2 px-5 py-2 text-sm font-bold transition-colors ${
+              className={`flex-1 rounded-md border-2 px-5 py-3 text-sm font-bold transition-colors ${
                 selected
                   ? "border-ink bg-brand text-ink"
                   : "border-ink/20 bg-white text-ink-soft hover:border-ink"

@@ -1,59 +1,186 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { buildGeneralWhatsAppLink } from "@/lib/bookings/whatsapp";
+import { SERVICES } from "@/lib/services/data";
 
-const sections = [
-  {
-    href: "/book",
-    title: "حجز موعد",
-    description: "صفحة الحجز الإلكتروني للعملاء لتسجيل طلب جديد.",
-  },
-  {
-    href: "/admin/bookings",
-    title: "الحجوزات",
-    description: "لوحة الإدارة لمتابعة طلبات الحجز الواردة.",
-  },
-  {
-    href: "/admin/work-orders",
-    title: "أوامر العمل",
-    description: "متابعة أوامر العمل بعد تحويل الحجوزات.",
-  },
+const WHATSAPP_LINK = buildGeneralWhatsAppLink(
+  "مرحباً، أرغب في الاستفسار عن خدماتكم."
+);
+
+const FEATURES = [
+  { icon: "🛡️", title: "شفافية", desc: "تقرير واضح وأسعار عادلة" },
+  { icon: "🧰", title: "أحدث الأجهزة", desc: "تقنيات فحص وبرمجة حديثة" },
+  { icon: "📋", title: "تقرير رقمي", desc: "تقرير شامل وفوري وآمن" },
+  { icon: "⭐", title: "خبرة عالية", desc: "فنيون متخصصون ومدربون" },
+];
+
+const JOURNEY_STEPS = [
+  "احجز موعدك",
+  "نراجع الطلب",
+  "نستقبل السيارة",
+  "نشخص بدقة",
+  "نرسل التوصية",
+  "تستلم سيارتك",
+];
+
+const PWA_FEATURES = [
+  { icon: "➕", title: "إضافة للشاشة الرئيسية" },
+  { icon: "🔔", title: "إشعارات مستقبلية" },
+  { icon: "💬", title: "تحديثات واتساب" },
+  { icon: "🚗", title: "متابعة حالة السيارة" },
 ];
 
 export default function HomePage() {
   return (
-    <div className="space-y-8">
-      <section className="rounded-xl border-2 border-ink bg-white p-6">
-        <span className="inline-block rounded-md bg-brand px-3 py-1 text-sm font-bold text-ink">
-          DiagPro Manager V1 — نسخة التدفق النقدي
+    <div className="space-y-8 rounded-2xl border border-white/10 bg-[#0d0d0f] p-4 text-white sm:p-6">
+      {/* Hero */}
+      <section className="overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#1c1c1f] to-[#0d0d0f] p-5">
+        <span className="inline-block rounded-full bg-brand px-3 py-1 text-xs font-bold text-ink">
+          مركز التشخيص الاحترافي
         </span>
-        <h1 className="mt-4 text-2xl font-extrabold text-ink sm:text-3xl">
-          مرحباً بك في نظام إدارة الورشة
+        <h1 className="mt-3 text-2xl font-extrabold leading-snug sm:text-3xl">
+          تشخيص دقيق <span className="text-brand">وبرمجة احترافية</span> لكهرباء
+          السيارات الحديثة
         </h1>
-        <p className="mt-2 max-w-2xl text-ink-soft">
-          ابدأ من إدارة الحجوزات الإلكترونية: استقبل الطلبات، تابع العملاء، وحوّل
-          الحجوزات إلى أوامر عمل بوضوح.
+        <p className="mt-3 text-sm leading-relaxed text-white/70">
+          مركز متخصص في تشخيص وبرمجة وصيانة كهرباء السيارات الحديثة بأجهزة
+          متقدمة وتقرير واضح.
         </p>
-        <div className="mt-5">
-          <Link href="/book">
-            <Button>حجز موعد جديد</Button>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <Link href="/book" className="block sm:inline-block">
+            <Button className="w-full py-3.5 text-base sm:w-auto">
+              احجز الآن
+            </Button>
           </Link>
+          <a
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block sm:inline-block"
+          >
+            <Button
+              variant="secondary"
+              className="w-full py-3.5 text-base sm:w-auto"
+            >
+              واتساب
+            </Button>
+          </a>
         </div>
       </section>
 
+      {/* Feature highlights */}
+      <section className="grid grid-cols-2 gap-3">
+        {FEATURES.map((f) => (
+          <div
+            key={f.title}
+            className="rounded-xl border border-white/10 bg-[#18181b] p-4 text-center"
+          >
+            <div className="text-2xl" aria-hidden>
+              {f.icon}
+            </div>
+            <div className="mt-2 text-sm font-extrabold text-brand">
+              {f.title}
+            </div>
+            <div className="mt-1 text-xs leading-relaxed text-white/60">
+              {f.desc}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* Main services */}
       <section>
-        <h2 className="mb-4 text-xl font-extrabold text-ink">الأقسام</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sections.map((section) => (
-            <Link key={section.href} href={section.href} className="block">
-              <Card className="h-full transition-shadow hover:shadow-md">
-                <h3 className="text-lg font-bold text-ink">{section.title}</h3>
-                <p className="mt-2 text-sm text-ink-soft">
-                  {section.description}
-                </p>
-              </Card>
-            </Link>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold">خدماتنا الرئيسية</h2>
+          <Link href="/services" className="text-xs font-bold text-brand">
+            عرض الكل ‹
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {SERVICES.slice(0, 4).map((service) => (
+            <div
+              key={service.id}
+              className="flex flex-col rounded-xl border border-white/10 bg-[#18181b] p-3"
+            >
+              <span className="text-2xl" aria-hidden>
+                {service.icon}
+              </span>
+              <span className="mt-2 text-sm font-bold leading-snug">
+                {service.title}
+              </span>
+              <Link href="/book" className="mt-3 block">
+                <span className="block rounded-md bg-brand px-3 py-2 text-center text-xs font-extrabold text-ink">
+                  احجز
+                </span>
+              </Link>
+            </div>
           ))}
+        </div>
+      </section>
+
+      {/* Journey steps */}
+      <section>
+        <h2 className="mb-3 text-lg font-extrabold">رحلة الخدمة معنا</h2>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {JOURNEY_STEPS.map((step, i) => (
+            <div
+              key={step}
+              className="flex min-w-[110px] flex-col items-center gap-2 rounded-xl border border-white/10 bg-[#18181b] p-3 text-center"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-extrabold text-ink">
+                {i + 1}
+              </span>
+              <span className="text-xs font-bold text-white/80">{step}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Digital experience */}
+      <section className="rounded-xl border border-white/10 bg-[#18181b] p-4">
+        <h2 className="text-lg font-extrabold">تجربة رقمية أسرع</h2>
+        <p className="mt-1 text-xs text-white/60">
+          مزايا تسهّل متابعة حجزك والتواصل مع المركز.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {PWA_FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="flex flex-col items-center gap-1.5 rounded-lg border border-white/10 bg-[#0d0d0f] p-3 text-center"
+            >
+              <span className="text-xl" aria-hidden>
+                {f.icon}
+              </span>
+              <span className="text-xs font-bold text-white/80">
+                {f.title}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="rounded-xl border-2 border-brand bg-gradient-to-br from-brand/15 to-transparent p-5 text-center">
+        <h2 className="text-xl font-extrabold">جاهز تبدأ؟ احجز فحصك الآن</h2>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Link href="/book" className="block sm:inline-block">
+            <Button className="w-full py-3.5 text-base sm:w-auto">
+              احجز الآن
+            </Button>
+          </Link>
+          <a
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block sm:inline-block"
+          >
+            <Button
+              variant="secondary"
+              className="w-full py-3.5 text-base sm:w-auto"
+            >
+              واتساب
+            </Button>
+          </a>
         </div>
       </section>
     </div>

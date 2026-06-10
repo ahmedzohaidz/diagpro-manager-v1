@@ -9,6 +9,14 @@ import type { Booking } from "./types";
 // Workshop WhatsApp number (international format, no "+").
 export const WORKSHOP_WHATSAPP_NUMBER = "966535473565";
 
+/**
+ * Builds a generic wa.me link with a pre-filled message — used by marketing
+ * pages (home/services) that are not tied to a specific booking record.
+ */
+export function buildGeneralWhatsAppLink(message: string): string {
+  return `https://wa.me/${WORKSHOP_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 export function buildWhatsAppLink(booking: Booking): string {
   const lines = [
     "مرحباً، أرغب بتأكيد طلب حجز:",
