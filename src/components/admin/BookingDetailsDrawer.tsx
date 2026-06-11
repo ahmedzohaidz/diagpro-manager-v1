@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Detail } from "@/components/ui/Detail";
 import { bookingStatusLabels, type BookingStatus } from "@/lib/statuses";
 import type { Booking, BookingStatusLog } from "@/lib/bookings/types";
+import type { WorkOrder } from "@/lib/work-orders/types";
+import { CONVERTIBLE_STATUSES } from "@/lib/work-orders/useConvertBooking";
 import {
   whatsappAppointmentConfirmation,
   whatsappMissingData,
@@ -50,12 +53,11 @@ const whatsappActions: { label: string; build: (booking: Booking) => string }[] 
   { label: ACTION_LABELS.sendNoAvailability, build: whatsappNoAvailability },
 ];
 
-const CONVERTIBLE_STATUSES: BookingStatus[] = ["confirmed", "arrived"];
-
 interface BookingDetailsDrawerProps {
   booking: Booking;
   statusLogs: BookingStatusLog[];
   logsLoading: boolean;
+  workOrder: WorkOrder | null;
   onClose: () => void;
   onStatusChange: (id: string, status: BookingStatus) => void;
   onConvert: (booking: Booking) => void;
@@ -65,11 +67,17 @@ export function BookingDetailsDrawer({
   booking,
   statusLogs,
   logsLoading,
+  workOrder,
   onClose,
   onStatusChange,
   onConvert,
 }: BookingDetailsDrawerProps) {
-  const canConvert = CONVERTIBLE_STATUSES.includes(booking.status);
+  // A booking that already has a work order is shown as converted instead of
+  // offering the convert action again — this is the authoritative duplicate
+  // guard in the UI (Phase 17).
+  const isConverted =
+    booking.status === "converted_to_work_order" || workOrder !== null;
+  const canConvert = !isConverted && CONVERTIBLE_STATUSES.includes(booking.status);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center sm:p-4">
@@ -187,6 +195,25 @@ export function BookingDetailsDrawer({
               )}
             </div>
           </div>
+
+          {isConverted && (
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+              <p className="text-sm font-extrabold text-green-800">
+                تم تحويل هذا الحجز إلى أمر عمل
+              </p>
+              {workOrder && (
+                <p className="mt-1 text-sm font-bold text-green-700">
+                  رقم أمر العمل: {workOrder.workOrderNumber}
+                </p>
+              )}
+              <Link
+                href="/admin/work-orders"
+                className="mt-3 inline-block rounded-md border-2 border-ink bg-brand px-3 py-1.5 text-xs font-extrabold text-ink hover:bg-brand-dark"
+              >
+                فتح أوامر العمل
+              </Link>
+            </div>
+          )}
 
           <div>
             <p className="mb-2 text-xs font-bold text-ink-soft">رسائل واتساب:</p>

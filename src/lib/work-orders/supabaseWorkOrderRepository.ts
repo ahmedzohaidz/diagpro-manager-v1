@@ -103,6 +103,20 @@ export const supabaseWorkOrderRepository: WorkOrderRepository = {
     return bookingHasWorkOrder(bookingId);
   },
 
+  async findByBooking(bookingId: string): Promise<WorkOrder | null> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from("work_orders")
+      .select(WORK_ORDER_SELECT)
+      .eq("booking_id", bookingId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error("تعذّر تحميل أمر العمل.");
+    if (!data) return null;
+    return mapRow(data as unknown as WorkOrderRow);
+  },
+
   async createFromBooking(booking: Booking): Promise<WorkOrder> {
     if (await bookingHasWorkOrder(booking.id)) {
       throw new Error("تم تحويل هذا الحجز مسبقًا.");
@@ -138,6 +152,17 @@ export const supabaseWorkOrderRepository: WorkOrderRepository = {
     } catch (err) {
       if (err instanceof Error && err.message === "تم تحويل هذا الحجز مسبقًا.") {
         throw err;
+      }
+      // UNIQUE(booking_id) violation → a work order already exists for this
+      // booking (e.g. a concurrent conversion won the race). Surface the
+      // accurate message instead of the generic failure.
+      if (
+        err &&
+        typeof err === "object" &&
+        "code" in err &&
+        (err as { code?: string }).code === "23505"
+      ) {
+        throw new Error("تم تحويل هذا الحجز مسبقًا.");
       }
       throw new Error("تعذّر إنشاء أمر العمل.");
     }

@@ -8,11 +8,18 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Detail } from "@/components/ui/Detail";
 import { DemoDataControls } from "@/components/admin/DemoDataControls";
 import { BookingDetailsDrawer } from "@/components/admin/BookingDetailsDrawer";
+import { ConvertBookingModal } from "@/components/admin/ConvertBookingModal";
+import { ConvertResultNotice } from "@/components/admin/ConvertResultNotice";
 import { bookingStatusLabels, type BookingStatus } from "@/lib/statuses";
 import { bookingRepository } from "@/lib/bookings/bookingRepository";
 import { statusLogRepository } from "@/lib/bookings/statusLogRepository";
 import { workOrderRepository } from "@/lib/work-orders/workOrderRepository";
+import {
+  useConvertBooking,
+  CONVERTIBLE_STATUSES,
+} from "@/lib/work-orders/useConvertBooking";
 import type { Booking, BookingStatusLog } from "@/lib/bookings/types";
+import type { WorkOrder } from "@/lib/work-orders/types";
 import {
   bookingStatusTone,
   priorityLabel,
@@ -33,10 +40,6 @@ const quickActions: { status: BookingStatus; label: string }[] = [
   { status: "cancelled", label: ACTION_LABELS.rejectBooking },
 ];
 
-// A booking can be converted to a work order only from these statuses.
-const CONVERTIBLE_STATUSES: BookingStatus[] = ["confirmed", "arrived"];
-
-type Notice = { type: "success" | "error"; text: string };
 type DateFilter = "all" | "today";
 
 function isToday(iso: string): boolean {
@@ -53,7 +56,6 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<Notice | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<"all" | BookingStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "normal">(
@@ -65,6 +67,27 @@ export default function AdminBookingsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusLogs, setStatusLogs] = useState<BookingStatusLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(
+    null
+  );
+
+  const {
+    convertTarget,
+    converting,
+    notice,
+    setNotice,
+    requestConvert,
+    cancelConvert,
+    confirmConvert,
+  } = useConvertBooking({
+    onConverted: async (_workOrder, booking) => {
+      await load();
+      if (selectedId === booking.id) {
+        await loadStatusLogs(booking.id);
+        await loadWorkOrder(booking.id);
+      }
+    },
+  });
 
   async function load() {
     setLoading(true);
@@ -93,15 +116,27 @@ export default function AdminBookingsPage() {
     }
   }
 
+  async function loadWorkOrder(bookingId: string) {
+    try {
+      const wo = await workOrderRepository.findByBooking(bookingId);
+      setSelectedWorkOrder(wo);
+    } catch {
+      setSelectedWorkOrder(null);
+    }
+  }
+
   function openDetails(booking: Booking) {
     setSelectedId(booking.id);
     setStatusLogs([]);
+    setSelectedWorkOrder(null);
     void loadStatusLogs(booking.id);
+    void loadWorkOrder(booking.id);
   }
 
   function closeDetails() {
     setSelectedId(null);
     setStatusLogs([]);
+    setSelectedWorkOrder(null);
   }
 
   async function handleStatusChange(id: string, status: BookingStatus) {
@@ -116,38 +151,6 @@ export default function AdminBookingsPage() {
       }
     } catch {
       setError("تعذّر تحديث حالة الحجز.");
-    }
-  }
-
-  async function handleConvert(booking: Booking) {
-    setNotice(null);
-    if (!CONVERTIBLE_STATUSES.includes(booking.status)) {
-      setNotice({ type: "error", text: "لا يمكن تحويل هذا الحجز إلى أمر عمل." });
-      return;
-    }
-    try {
-      const alreadyConverted = await workOrderRepository.existsForBooking(
-        booking.id
-      );
-      if (alreadyConverted) {
-        setNotice({ type: "error", text: "تم تحويل هذا الحجز مسبقًا." });
-        return;
-      }
-      await workOrderRepository.createFromBooking(booking);
-      await bookingRepository.updateStatus(
-        booking.id,
-        "converted_to_work_order"
-      );
-      await load();
-      setNotice({ type: "success", text: "تم تحويل الحجز إلى أمر عمل بنجاح." });
-    } catch (err) {
-      setNotice({
-        type: "error",
-        text:
-          err instanceof Error
-            ? err.message
-            : "لا يمكن تحويل هذا الحجز إلى أمر عمل.",
-      });
     }
   }
 
@@ -275,17 +278,7 @@ export default function AdminBookingsPage() {
 
       <DemoDataControls onChange={load} />
 
-      {notice && (
-        <p
-          className={`rounded-md border px-3 py-2 text-sm font-bold ${
-            notice.type === "success"
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
-        >
-          {notice.text}
-        </p>
-      )}
+      {notice && <ConvertResultNotice notice={notice} />}
 
       {error && (
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
@@ -337,7 +330,7 @@ export default function AdminBookingsPage() {
               key={b.id}
               booking={b}
               onStatusChange={handleStatusChange}
-              onConvert={handleConvert}
+              onConvert={requestConvert}
               onOpenDetails={openDetails}
             />
           ))}
@@ -349,9 +342,19 @@ export default function AdminBookingsPage() {
           booking={selectedBooking}
           statusLogs={statusLogs}
           logsLoading={logsLoading}
+          workOrder={selectedWorkOrder}
           onClose={closeDetails}
           onStatusChange={handleStatusChange}
-          onConvert={handleConvert}
+          onConvert={requestConvert}
+        />
+      )}
+
+      {convertTarget && (
+        <ConvertBookingModal
+          booking={convertTarget}
+          submitting={converting}
+          onCancel={cancelConvert}
+          onConfirm={confirmConvert}
         />
       )}
     </div>

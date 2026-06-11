@@ -65,6 +65,10 @@ export const localWorkOrderRepository: WorkOrderRepository = {
     return readAll().some((wo) => wo.bookingId === bookingId);
   },
 
+  async findByBooking(bookingId: string): Promise<WorkOrder | null> {
+    return readAll().find((wo) => wo.bookingId === bookingId) ?? null;
+  },
+
   async createFromBooking(booking: Booking): Promise<WorkOrder> {
     if (!isBrowser()) {
       throw new Error("التخزين المحلي غير متاح في هذه البيئة.");

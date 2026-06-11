@@ -29,4 +29,5 @@ export interface WorkOrderRepository {
   list(): Promise<WorkOrder[]>;
   createFromBooking(booking: Booking): Promise<WorkOrder>;
   existsForBooking(bookingId: string): Promise<boolean>;
+  findByBooking(bookingId: string): Promise<WorkOrder | null>;
 }

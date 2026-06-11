@@ -7,7 +7,12 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Detail } from "@/components/ui/Detail";
 import { bookingStatusLabels, type BookingStatus } from "@/lib/statuses";
 import { bookingRepository } from "@/lib/bookings/bookingRepository";
-import { workOrderRepository } from "@/lib/work-orders/workOrderRepository";
+import { ConvertBookingModal } from "@/components/admin/ConvertBookingModal";
+import { ConvertResultNotice } from "@/components/admin/ConvertResultNotice";
+import {
+  useConvertBooking,
+  CONVERTIBLE_STATUSES,
+} from "@/lib/work-orders/useConvertBooking";
 import {
   whatsappBookingReceived,
   whatsappMissingData,
@@ -56,15 +61,20 @@ const sections: { key: string; title: string; match: (b: Booking) => boolean }[]
     },
   ];
 
-const CONVERTIBLE_STATUSES: BookingStatus[] = ["confirmed", "arrived"];
-
-type Notice = { type: "success" | "error"; text: string };
-
 export default function BookingFollowUpPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<Notice | null>(null);
+
+  const {
+    convertTarget,
+    converting,
+    notice,
+    setNotice,
+    requestConvert,
+    cancelConvert,
+    confirmConvert,
+  } = useConvertBooking({ onConverted: load });
 
   async function load() {
     setLoading(true);
@@ -89,35 +99,6 @@ export default function BookingFollowUpPage() {
       await load();
     } catch {
       setNotice({ type: "error", text: "تعذّر تحديث حالة الحجز." });
-    }
-  }
-
-  async function handleConvert(booking: Booking) {
-    setNotice(null);
-    if (!CONVERTIBLE_STATUSES.includes(booking.status)) {
-      setNotice({ type: "error", text: "لا يمكن تحويل هذا الحجز إلى أمر عمل." });
-      return;
-    }
-    try {
-      if (await workOrderRepository.existsForBooking(booking.id)) {
-        setNotice({ type: "error", text: "تم تحويل هذا الحجز مسبقًا." });
-        return;
-      }
-      await workOrderRepository.createFromBooking(booking);
-      await bookingRepository.updateStatus(
-        booking.id,
-        "converted_to_work_order"
-      );
-      await load();
-      setNotice({ type: "success", text: "تم تحويل الحجز إلى أمر عمل بنجاح." });
-    } catch (err) {
-      setNotice({
-        type: "error",
-        text:
-          err instanceof Error
-            ? err.message
-            : "لا يمكن تحويل هذا الحجز إلى أمر عمل.",
-      });
     }
   }
 
@@ -146,17 +127,7 @@ export default function BookingFollowUpPage() {
         </Button>
       </header>
 
-      {notice && (
-        <p
-          className={`rounded-md border px-3 py-2 text-sm font-bold ${
-            notice.type === "success"
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
-        >
-          {notice.text}
-        </p>
-      )}
+      {notice && <ConvertResultNotice notice={notice} />}
 
       {error && (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
@@ -200,7 +171,7 @@ export default function BookingFollowUpPage() {
                       key={`${section.key}_${b.id}`}
                       booking={b}
                       onStatusChange={handleStatusChange}
-                      onConvert={handleConvert}
+                      onConvert={requestConvert}
                     />
                   ))}
                 </div>
@@ -208,6 +179,14 @@ export default function BookingFollowUpPage() {
             )
           )}
         </div>
+      )}
+      {convertTarget && (
+        <ConvertBookingModal
+          booking={convertTarget}
+          submitting={converting}
+          onCancel={cancelConvert}
+          onConfirm={confirmConvert}
+        />
       )}
     </div>
   );
