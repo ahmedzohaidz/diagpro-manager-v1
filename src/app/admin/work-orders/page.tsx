@@ -16,6 +16,7 @@ import {
 } from "@/lib/whatsapp/whatsappMessages";
 import type { WorkOrder } from "@/lib/work-orders/types";
 import { workOrderStatusTone, formatDateTime, BTN_WHATSAPP } from "@/lib/ui/display";
+import { WorkOrderFinancials } from "@/components/admin/WorkOrderFinancials";
 
 // WhatsApp message actions available per work order (prepared links only).
 const whatsappWorkOrderActions: {
@@ -202,6 +203,8 @@ function WorkOrderCard({ workOrder }: { workOrder: WorkOrder }) {
           </a>
         ))}
       </div>
+
+      <WorkOrderFinancials workOrder={workOrder} />
     </Card>
   );
 }

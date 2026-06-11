@@ -1,4 +1,9 @@
-import type { BookingStatus, WorkOrderStatus } from "@/lib/statuses";
+import type {
+  BookingStatus,
+  WorkOrderStatus,
+  QuoteStatus,
+  PaymentStatus,
+} from "@/lib/statuses";
 import type { BookingPriority } from "@/lib/bookings/types";
 
 /**
@@ -31,6 +36,54 @@ export const workOrderStatusTone: Record<WorkOrderStatus, BadgeTone> = {
   delivered: "success",
   cancelled: "danger",
 };
+
+// -----------------------------------------------------------------------------
+// Phase 19A — financial closure display helpers.
+// -----------------------------------------------------------------------------
+
+export const quoteStatusTone: Record<QuoteStatus, BadgeTone> = {
+  draft: "neutral",
+  sent: "brand",
+  approved: "success",
+  rejected: "danger",
+};
+
+export const paymentStatusTone: Record<PaymentStatus, BadgeTone> = {
+  unpaid: "danger",
+  partial: "brand",
+  paid: "success",
+};
+
+/**
+ * Customer approval is DERIVED from the quote status (single source of truth) —
+ * there is no separate approval column. Rendered as a clear badge, never free
+ * text.
+ */
+export function customerApprovalView(status: QuoteStatus): {
+  label: string;
+  tone: BadgeTone;
+} {
+  switch (status) {
+    case "approved":
+      return { label: "وافق العميل", tone: "success" };
+    case "rejected":
+      return { label: "رفض العميل", tone: "danger" };
+    case "sent":
+      return { label: "بانتظار موافقة العميل", tone: "brand" };
+    default:
+      return { label: "لم يُرسل العرض بعد", tone: "neutral" };
+  }
+}
+
+/** Formats an amount in Saudi Riyal, e.g. "1,250.00 ر.س". */
+export function formatCurrency(amount: number): string {
+  const n = Number.isFinite(amount) ? amount : 0;
+  const formatted = n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${formatted} ر.س`;
+}
 
 export function priorityLabel(priority: BookingPriority): string {
   return priority === "high" || priority === "urgent" ? "أولوية عالية" : "عادي";

@@ -51,3 +51,38 @@ export const workOrderStatusLabels: Record<WorkOrderStatus, string> = {
   delivered: "تم التسليم",
   cancelled: "ملغي",
 };
+
+// -----------------------------------------------------------------------------
+// Phase 19A — work order financial closure statuses.
+//
+// The quote lifecycle (quote_status) is the single source of truth for the
+// money flow. "Customer approval" is NOT a separate status — it is derived from
+// quote_status for display (see customerApprovalView in lib/ui/display.ts).
+// -----------------------------------------------------------------------------
+
+export type QuoteStatus = "draft" | "sent" | "approved" | "rejected";
+
+export const quoteStatusLabels: Record<QuoteStatus, string> = {
+  draft: "مسودة",
+  sent: "مُرسل للعميل",
+  approved: "موافق عليه",
+  rejected: "مرفوض",
+};
+
+// Derived (computed in the app from payments vs total) — never stored.
+export type PaymentStatus = "unpaid" | "partial" | "paid";
+
+export const paymentStatusLabels: Record<PaymentStatus, string> = {
+  unpaid: "غير مدفوع",
+  partial: "مدفوع جزئيًا",
+  paid: "مدفوع بالكامل",
+};
+
+export type PaymentMethod = "cash" | "card" | "transfer" | "credit";
+
+export const paymentMethodLabels: Record<PaymentMethod, string> = {
+  cash: "كاش",
+  card: "شبكة",
+  transfer: "تحويل",
+  credit: "آجل",
+};
