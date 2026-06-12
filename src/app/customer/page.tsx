@@ -47,7 +47,7 @@ export default function CustomerDashboardPage() {
             const account = await customerRepository.getByAuthUserId(
               session.user.id
             );
-            if (!account) {
+            if (!account || account.status !== "active") {
               setError("حسابك غير مفعل بعد. تواصل مع الإدارة.");
               if (isMounted) setLoading(false);
               return;
