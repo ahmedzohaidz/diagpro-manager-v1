@@ -15,7 +15,8 @@ import { BottomNav } from "@/components/layout/BottomNav";
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/admin")) {
+  // Skip SiteChrome for admin and customer portal routes (they have their own layouts)
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/customer")) {
     return <>{children}</>;
   }
 

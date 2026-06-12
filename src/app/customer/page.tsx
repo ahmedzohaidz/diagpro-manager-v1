@@ -22,50 +22,62 @@ export default function CustomerDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
+    let isMounted = true;
     const supabase = createAuthBrowserClient();
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          router.push("/customer/login");
-          return;
-        }
-
-        setEmail(data.session.user.email ?? null);
-
-        const account = await customerRepository.getByAuthUserId(
-          data.session.user.id
-        );
-        if (!account) {
-          setError("حسابك غير مفعل بعد. تواصل مع الإدارة.");
-          setLoading(false);
-          return;
-        }
-
-        setAccount(account);
-      } catch {
-        setError("تعذّر تحميل حسابك.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (!isMounted) return;
+
         if (!session) {
+          setLoading(false);
           router.push("/customer/login");
+          return;
         }
+
+        // Load customer data when authenticated
+        const load = async () => {
+          if (!isMounted) return;
+          setLoading(true);
+          setError(null);
+
+          try {
+            setEmail(session.user.email ?? null);
+
+            const account = await customerRepository.getByAuthUserId(
+              session.user.id
+            );
+            if (!account) {
+              setError("حسابك غير مفعل بعد. تواصل مع الإدارة.");
+              if (isMounted) setLoading(false);
+              return;
+            }
+
+            if (isMounted) setAccount(account);
+          } catch {
+            if (isMounted) setError("تعذّر تحميل حسابك.");
+          } finally {
+            if (isMounted) setLoading(false);
+          }
+        };
+
+        load();
       }
     );
 
+    // Fallback: if no auth state change after 2s, redirect to login
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+        router.push("/customer/login");
+      }
+    }, 2000);
+
+    setMounted(true);
+
     return () => {
+      isMounted = false;
+      clearTimeout(timeout);
       subscription?.subscription.unsubscribe();
     };
   }, [router]);

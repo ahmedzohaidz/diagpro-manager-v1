@@ -22,14 +22,7 @@ export default function CustomerLoginPage() {
 
   useEffect(() => {
     setMounted(true);
-    const supabase = createAuthBrowserClient();
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        router.push("/customer");
-      }
-    });
-  }, [router]);
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -55,8 +48,6 @@ export default function CustomerLoginPage() {
       setLoading(false);
     }
   }
-
-  if (!mounted) return null;
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">

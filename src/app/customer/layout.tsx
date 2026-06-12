@@ -20,10 +20,7 @@ function CustomerLogout() {
     const supabase = createAuthBrowserClient();
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) setEmail(data.session?.user?.email ?? null);
-    });
-
+    // Only listen for state changes, don't call getSession (can hang)
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (mounted) setEmail(session?.user?.email ?? null);
     });
