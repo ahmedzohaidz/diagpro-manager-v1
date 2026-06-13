@@ -7,34 +7,62 @@ const WHATSAPP_LINK = buildGeneralWhatsAppLink(
   "مرحباً، أرغب في الاستفسار عن خدماتكم."
 );
 
-const SPECIAL_OFFERS = [
+const HERO_CARDS = [
+  {
+    icon: "🔧",
+    title: "فحص ذكي",
+    description: "15 دقيقة",
+    price: "99",
+    discount: "",
+  },
   {
     icon: "🔑",
-    title: "برمجة وفحص وحدات التحكم",
+    title: "برمجة ECU",
+    description: "وحدات التحكم",
     price: "299",
     discount: "",
-    features: ["فحص وحدات التحكم الإلكترونية", "برمجة وتحديث حسب الطراز"],
   },
   {
     icon: "📡",
-    title: "تشخيص شامل قبل السفر",
+    title: "فحص شامل",
+    description: "قبل السفر",
     price: "249",
     discount: "",
-    features: ["فحص شامل لأنظمة السيارة", "تقرير مفصل بالحالة العامة"],
   },
   {
     icon: "🚗",
-    title: "باقة فحص ودسمة البطارية",
+    title: "فحص البطارية",
+    description: "والدسمة",
     price: "199",
     discount: "",
-    features: ["فحص البطارية والتيار والفولتية", "ورسمة وتحديث حسب الطراز"],
   },
   {
     icon: "🔐",
-    title: "برمجة المفاتيح والريموت",
+    title: "برمجة المفاتيح",
+    description: "والريموت",
     price: "199",
-    discount: "خصم 30%",
-    features: ["برمجة جميع أنواع المفاتيح", "إضافة مفاتيح جديدة"],
+    discount: "30%",
+  },
+  {
+    icon: "⚙️",
+    title: "فحص المحرك",
+    description: "تشخيص شامل",
+    price: "179",
+    discount: "",
+  },
+  {
+    icon: "🔋",
+    title: "فحص الأنظمة",
+    description: "جميع الأنظمة",
+    price: "159",
+    discount: "",
+  },
+  {
+    icon: "📊",
+    title: "تقرير مفصل",
+    description: "رقمي وآمن",
+    price: "مجاني",
+    discount: "",
   },
 ];
 
@@ -57,120 +85,88 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Hero Section */}
-      <section className="relative w-full h-screen md:h-96 bg-gradient-to-r from-black via-gray-900 to-black">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/80" />
-
+      <section className="relative w-full bg-gradient-to-b from-black via-gray-900 to-black px-4 sm:px-8 py-12 sm:py-16">
         {/* Background Image Area */}
-        <div className="absolute inset-0 flex items-center justify-center text-center text-gray-600">
-          <div className="text-6xl opacity-30">🏭 صورة الورشة والسيارة</div>
+        <div className="absolute inset-0 opacity-20 flex items-center justify-center text-center">
+          <div className="text-8xl">🏭</div>
         </div>
 
-        {/* Content */}
-        <div className="relative h-full flex items-center justify-end px-4 sm:px-8">
-          <div className="max-w-2xl text-right space-y-6">
-            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight">
+        <div className="relative max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-right mb-12">
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
               عروضنا الحالية
             </h1>
-
-            {/* Offer Badge */}
             <div className="inline-block bg-brand/90 rounded-full px-6 py-3 text-black font-bold text-lg">
               ⏰ عروض حصرية لفترة محدودة - لا تفوتها!
             </div>
-
-            {/* Main Offer Box */}
-            <div className="border-2 border-brand rounded-2xl bg-black/60 p-8 space-y-4">
-              <div className="flex justify-end items-baseline gap-3 text-right">
-                <span className="text-base text-gray-400">فحص ذكي خلال</span>
-                <span className="text-6xl font-extrabold text-brand">15</span>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">دقيقة</p>
-                  <p className="text-sm text-gray-400">⏱️</p>
-                </div>
-              </div>
-
-              <div className="flex justify-end items-baseline gap-3 text-right border-t border-brand/30 pt-4">
-                <span className="text-base text-gray-400">بـ</span>
-                <span className="text-6xl font-extrabold text-brand">99</span>
-                <span className="text-2xl font-bold">ريال</span>
-              </div>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex gap-4 justify-end">
-              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-bold text-lg min-h-[56px]">
-                  💬 واتساب
-                </Button>
-              </a>
-              <Link href="/book">
-                <Button className="bg-brand hover:bg-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg min-h-[56px]">
-                  📅 احجز الآن
-                </Button>
-              </Link>
-            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Special Offers Section */}
-      <section className="w-full px-4 sm:px-8 py-16 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-extrabold mb-2 text-right">
-            عروض مميزة لفترة محدودة
-          </h2>
-          <p className="text-gray-400 mb-12 text-right">
-            تصفح جميع عروضنا الخاصة والحصرية
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {SPECIAL_OFFERS.map((offer, idx) => (
+          {/* 8 Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {HERO_CARDS.map((card, idx) => (
               <div
                 key={idx}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-brand/50 transition-all"
+                className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 border-2 border-brand/50 hover:border-brand rounded-xl p-5 sm:p-6 text-center transition-all hover:shadow-lg hover:shadow-brand/20 group"
               >
-                {/* Image Placeholder */}
-                <div className="w-full h-40 bg-gray-800 rounded-lg mb-4 flex items-center justify-center text-4xl opacity-50">
-                  {offer.icon}
+                {/* Icon */}
+                <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">
+                  {card.icon}
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold text-right mb-2">
-                  {offer.title}
+                <h3 className="text-lg font-bold text-white mb-1">
+                  {card.title}
                 </h3>
 
-                {/* Discount Badge */}
-                {offer.discount && (
-                  <div className="inline-block bg-brand text-black px-3 py-1 rounded-full text-sm font-bold mb-3">
-                    خصم {offer.discount}
-                  </div>
-                )}
+                {/* Description */}
+                <p className="text-sm text-gray-400 mb-4">
+                  {card.description}
+                </p>
 
-                {/* Price */}
-                <div className="text-right mb-4">
-                  <span className="text-3xl font-extrabold text-brand">
-                    {offer.price}
-                  </span>
-                  <span className="text-gray-400"> ريال</span>
+                {/* Price Section */}
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  {card.price === "مجاني" ? (
+                    <div className="text-2xl font-extrabold text-brand">
+                      {card.price}
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-3xl font-extrabold text-brand">
+                        {card.price}
+                      </span>
+                      <span className="text-sm text-gray-400">ريال</span>
+                    </div>
+                  )}
+                  {card.discount && (
+                    <div className="text-xs text-brand font-bold mt-1">
+                      ↓ خصم {card.discount}
+                    </div>
+                  )}
                 </div>
 
-                {/* Features */}
-                <ul className="space-y-2 mb-6 text-right">
-                  {offer.features.map((feature, i) => (
-                    <li key={i} className="text-sm text-gray-300 flex items-center justify-end gap-2">
-                      <span>{feature}</span>
-                      <span className="text-brand">✓</span>
-                    </li>
-                  ))}
-                </ul>
-
                 {/* Button */}
-                <Link href="/book" className="w-full block">
-                  <button className="w-full bg-brand/20 hover:bg-brand/40 text-brand border border-brand rounded-lg py-3 font-bold transition-all">
-                    احجز
+                <Link href="/book" className="block w-full">
+                  <button className="w-full bg-brand hover:bg-yellow-500 text-black font-bold py-3 rounded-lg transition-colors">
+                    احجز الآن
                   </button>
                 </Link>
               </div>
             ))}
+          </div>
+
+          {/* CTA Buttons Below Grid */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+              <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-bold text-lg min-h-[56px]">
+                💬 واتساب
+              </Button>
+            </a>
+            <Link href="/book">
+              <Button className="bg-brand hover:bg-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg min-h-[56px]">
+                📅 احجز الآن
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -309,7 +305,7 @@ export default function HomePage() {
             <h3 className="font-bold text-lg text-brand">📞 تواصل معنا</h3>
             <div className="space-y-1 text-sm text-gray-400">
               <p>☎️ 055 123 4567</p>
-              <a href={WHATSAPP_LINK} className="text-green-500 hover:text-green-400">
+              <a href={WHATSAPP_LINK} className="text-green-500 hover:text-green-400 block">
                 💬 واتساب
               </a>
             </div>
