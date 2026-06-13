@@ -39,7 +39,7 @@ const TRUST_STATS = [
 
 export default function HomePage() {
   return (
-    <div className="space-y-12 rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-950 via-gray-900 to-black p-6 text-white sm:p-8">
+    <div className="space-y-8 sm:space-y-12 rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-950 via-gray-900 to-black px-4 sm:px-6 py-6 sm:py-8 text-white">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-xl border border-gray-700 bg-gradient-to-br from-gray-900 to-gray-950 p-6 sm:p-8">
         <div
@@ -53,11 +53,11 @@ export default function HomePage() {
         <span className="relative inline-block rounded-full bg-brand/20 px-4 py-2 text-sm font-bold text-brand">
           مركز التشخيص الاحترافي
         </span>
-        <h1 className="relative mt-4 text-3xl font-extrabold leading-tight sm:text-4xl text-white">
+        <h1 className="relative mt-4 text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight text-white">
           تشخيص دقيق <span className="text-brand">وبرمجة احترافية</span> لكهرباء
           السيارات الحديثة
         </h1>
-        <p className="relative mt-4 text-base leading-relaxed text-gray-300">
+        <p className="relative mt-4 text-sm sm:text-base leading-relaxed text-gray-300">
           مركز متخصص في تشخيص وبرمجة وصيانة كهرباء السيارات الحديثة بأجهزة
           متقدمة وتقرير واضح.
         </p>
@@ -67,7 +67,7 @@ export default function HomePage() {
         </div>
         <div className="relative mt-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
           <Link href="/book" className="block sm:inline-block flex-1 sm:flex-none">
-            <Button className="w-full py-4 text-base sm:text-lg font-bold">
+            <Button className="w-full py-5 px-4 text-base sm:text-lg font-bold min-h-[56px] sm:min-h-[48px]">
               ✅ احجز الآن
             </Button>
           </Link>
@@ -79,7 +79,7 @@ export default function HomePage() {
           >
             <Button
               variant="secondary"
-              className="w-full py-4 text-base sm:text-lg font-bold"
+              className="w-full py-5 px-4 text-base sm:text-lg font-bold min-h-[56px] sm:min-h-[48px]"
             >
               💬 واتساب
             </Button>
@@ -88,13 +88,13 @@ export default function HomePage() {
       </section>
 
       {/* Trust stats */}
-      <section className="grid grid-cols-2 gap-4 rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-6 text-center sm:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-5 sm:p-6 text-center sm:grid-cols-4">
         {TRUST_STATS.map((stat) => (
           <div key={stat.label} className="space-y-2">
-            <div className="text-2xl font-extrabold text-brand sm:text-3xl">
+            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-brand">
               {stat.value}
             </div>
-            <div className="text-sm leading-tight text-gray-400 sm:text-base font-medium">
+            <div className="text-xs sm:text-sm md:text-base leading-tight text-gray-400 font-medium">
               {stat.label}
             </div>
           </div>
@@ -102,22 +102,22 @@ export default function HomePage() {
       </section>
 
       {/* Feature highlights */}
-      <section className="grid grid-cols-2 gap-4 sm:gap-6">
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {FEATURES.map((f) => (
           <div
             key={f.title}
-            className="rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-5 sm:p-6 text-center shadow-sm hover:shadow-md hover:border-brand/40 transition-all"
+            className="rounded-lg sm:rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-4 sm:p-5 md:p-6 text-center shadow-sm hover:shadow-md hover:border-brand/40 transition-all min-h-[200px] sm:min-h-[220px] flex flex-col justify-center"
           >
             <div
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand/20 text-3xl"
+              className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-brand/20 text-2xl sm:text-3xl"
               aria-hidden
             >
               {f.icon}
             </div>
-            <div className="mt-3 text-base sm:text-lg font-bold text-white">
+            <div className="mt-2 sm:mt-3 text-sm sm:text-base md:text-lg font-bold text-white">
               {f.title}
             </div>
-            <div className="mt-2 text-sm leading-relaxed text-gray-400">
+            <div className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-gray-400">
               {f.desc}
             </div>
           </div>
@@ -132,20 +132,22 @@ export default function HomePage() {
             عرض الكل ›
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {SERVICES.slice(0, 4).map((service) => (
             <div
               key={service.id}
-              className="flex flex-col rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-brand/40 transition-all"
+              className="flex flex-col rounded-lg sm:rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md hover:border-brand/40 transition-all min-h-[220px] justify-between"
             >
-              <span className="text-4xl" aria-hidden>
-                {service.icon}
-              </span>
-              <span className="mt-3 text-base sm:text-lg font-bold leading-snug text-white">
-                {service.title}
-              </span>
+              <div>
+                <span className="text-3xl sm:text-4xl block mb-3" aria-hidden>
+                  {service.icon}
+                </span>
+                <span className="text-sm sm:text-base md:text-lg font-bold leading-snug text-white block">
+                  {service.title}
+                </span>
+              </div>
               <Link href="/book" className="mt-4 block">
-                <span className="block rounded-lg bg-brand px-4 py-3 text-center text-sm font-extrabold text-ink hover:bg-brand/90 transition-colors">
+                <span className="block rounded-lg bg-brand px-4 py-3 sm:py-4 text-center text-xs sm:text-sm font-extrabold text-ink hover:bg-brand/90 transition-colors min-h-[48px] flex items-center justify-center">
                   احجز
                 </span>
               </Link>
@@ -159,16 +161,16 @@ export default function HomePage() {
         <div className="mb-6 border-b-2 border-gray-700 pb-4">
           <h2 className="text-2xl font-extrabold text-white">رحلة الخدمة معنا</h2>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-3">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-3">
           {JOURNEY_STEPS.map((step, i) => (
             <div
               key={step}
-              className="flex min-w-[130px] flex-col items-center gap-3 rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-4 text-center shadow-sm hover:shadow-md hover:border-brand/40 transition-all"
+              className="flex min-w-[140px] sm:min-w-[150px] flex-col items-center gap-3 rounded-lg sm:rounded-xl border border-gray-700 bg-gradient-to-br from-gray-800/30 to-gray-900/30 p-4 sm:p-5 text-center shadow-sm hover:shadow-md hover:border-brand/40 transition-all"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-base font-extrabold text-ink shadow-lg">
+              <span className="flex h-12 w-12 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-brand text-lg sm:text-base font-extrabold text-ink shadow-lg">
                 {i + 1}
               </span>
-              <span className="text-sm font-bold text-white leading-snug">{step}</span>
+              <span className="text-xs sm:text-sm font-bold text-white leading-snug">{step}</span>
             </div>
           ))}
         </div>
@@ -198,12 +200,12 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA */}
-      <section className="rounded-xl border-2 border-brand bg-gradient-to-br from-brand/20 to-brand/10 p-6 sm:p-8 text-center">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white">جاهز تبدأ؟ احجز فحصك الآن</h2>
-        <p className="mt-2 text-gray-300">اختر الوقت المناسب لك</p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link href="/book" className="block sm:inline-block">
-            <Button className="w-full py-4 text-base sm:w-auto font-bold">
+      <section className="rounded-lg sm:rounded-xl border-2 border-brand bg-gradient-to-br from-brand/20 to-brand/10 p-5 sm:p-6 md:p-8 text-center">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-tight">جاهز تبدأ؟ احجز فحصك الآن</h2>
+        <p className="mt-2 text-sm sm:text-base text-gray-300">اختر الوقت المناسب لك</p>
+        <div className="mt-5 sm:mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Link href="/book" className="block sm:inline-block flex-1 sm:flex-none">
+            <Button className="w-full py-5 px-4 text-base sm:text-lg font-bold min-h-[56px] sm:min-h-[48px]">
               ✅ احجز الآن
             </Button>
           </Link>
@@ -211,11 +213,11 @@ export default function HomePage() {
             href={WHATSAPP_LINK}
             target="_blank"
             rel="noopener noreferrer"
-            className="block sm:inline-block"
+            className="block sm:inline-block flex-1 sm:flex-none"
           >
             <Button
               variant="secondary"
-              className="w-full py-4 text-base sm:w-auto font-bold"
+              className="w-full py-5 px-4 text-base sm:text-lg font-bold min-h-[56px] sm:min-h-[48px]"
             >
               💬 واتساب
             </Button>
