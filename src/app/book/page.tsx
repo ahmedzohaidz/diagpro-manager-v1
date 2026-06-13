@@ -106,8 +106,8 @@ const SUCCESS_WHATSAPP_MESSAGE =
 // on iOS so Safari doesn't zoom in on focus).
 const LABEL_CLASS = "text-sm font-bold text-white/80";
 const INPUT_CLASS =
-  "mt-1.5 w-full rounded-md border border-white/10 bg-[#18181b] px-3 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand focus:ring-2 focus:ring-brand [font-size:16px] sm:text-sm sm:[font-size:0.875rem]";
-const TEXTAREA_CLASS = `${INPUT_CLASS} resize-none`;
+  "mt-1.5 w-full rounded-md border border-white/10 bg-[#18181b] px-4 py-3 text-base text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand focus:ring-2 focus:ring-brand [font-size:16px] sm:text-base";
+const TEXTAREA_CLASS = `${INPUT_CLASS} resize-none min-h-24`;
 const SELECT_CLASS = `${INPUT_CLASS} [color-scheme:dark]`;
 const DATE_TIME_CLASS = `${INPUT_CLASS} [color-scheme:dark]`;
 
@@ -148,11 +148,41 @@ export default function BookPage() {
       }
     }
 
-    const phoneDigits = form.phone.replace(/[\s-]/g, "");
-    if (form.phone.trim() && !SAUDI_MOBILE_REGEX.test(phoneDigits)) {
-      next.phone = "رقم جوال سعودي غير صحيح (مثال: 05XXXXXXXX)";
+    // Name validation: minimum 3 characters
+    if (form.customerFullName.trim().length > 0 && form.customerFullName.trim().length < 3) {
+      next.customerFullName = "الاسم يجب أن يكون 3 أحرف على الأقل";
     }
 
+    // Phone validation
+    const phoneDigits = form.phone.replace(/[\s-]/g, "");
+    if (form.phone.trim()) {
+      if (!SAUDI_MOBILE_REGEX.test(phoneDigits)) {
+        next.phone = "رقم جوال سعودي غير صحيح (مثال: 05XXXXXXXX أو 966501234567)";
+      }
+    }
+
+    // Car make and model: minimum 2 characters
+    if (form.carMake.trim().length > 0 && form.carMake.trim().length < 2) {
+      next.carMake = "نوع السيارة يجب أن يكون حرفين على الأقل";
+    }
+    if (form.carModel.trim().length > 0 && form.carModel.trim().length < 2) {
+      next.carModel = "موديل السيارة يجب أن يكون حرفين على الأقل";
+    }
+
+    // Problem description: minimum 5 characters
+    if (form.problemDescription.trim().length > 0 && form.problemDescription.trim().length < 5) {
+      next.problemDescription = "وصف المشكلة يجب أن يكون 5 أحرف على الأقل";
+    }
+
+    // Date validation: not in the past
+    const selectedDate = new Date(form.preferredDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (form.preferredDate && selectedDate < today) {
+      next.preferredDate = "يجب اختيار تاريخ مستقبلي";
+    }
+
+    // Boolean fields validation
     if (form.isDrivable === null) {
       next.isDrivable = "يرجى تحديد ما إذا كانت السيارة تسير";
     }
@@ -232,6 +262,8 @@ export default function BookPage() {
       selectedService ? `الخدمة: ${selectedService.label}` : null,
       `السيارة: ${savedBooking.carMake} ${savedBooking.carModel} - ${savedBooking.carYear}`,
       `المشكلة: ${savedBooking.problemDescription}`,
+      "",
+      "📍 موقعنا: حفرالباطن - الصناعية",
     ]
       .filter(Boolean)
       .join("\n");
@@ -343,6 +375,9 @@ export default function BookPage() {
           <span>
             عند وصولك سيكون موظف الاستقبال على علم ببيانات سيارتك ومشكلتك.
           </span>
+        </div>
+        <div className="mt-3 text-xs text-white/60">
+          <span className="font-bold text-white/80">ملاحظة:</span> الحقول المعلّمة بـ * مطلوبة
         </div>
       </header>
 
@@ -551,9 +586,10 @@ export default function BookPage() {
           {submitError && (
             <p
               role="alert"
-              className="mt-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-3 text-sm font-bold text-red-300"
+              className="mt-4 rounded-lg border border-red-500/40 bg-red-500/15 px-4 py-4 text-base font-bold text-red-300 flex items-start gap-3"
             >
-              {submitError}
+              <span className="text-xl">❌</span>
+              <span>{submitError}</span>
             </p>
           )}
         </div>
@@ -567,15 +603,15 @@ export default function BookPage() {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 py-4 text-base"
+            className="flex w-full items-center justify-center gap-2 py-5 text-lg font-bold transition-all disabled:opacity-70"
           >
             {loading && (
               <span
                 aria-hidden
-                className="h-4 w-4 animate-spin rounded-full border-2 border-ink/30 border-t-ink"
+                className="h-5 w-5 animate-spin rounded-full border-2 border-ink/30 border-t-ink"
               />
             )}
-            {loading ? "جاري إرسال الطلب..." : "إرسال طلب الحجز"}
+            {loading ? "⏳ جاري إرسال الطلب..." : "✅ إرسال طلب الحجز"}
           </Button>
         </div>
       </div>
@@ -598,7 +634,10 @@ function Field({
     <div className="flex flex-col">
       {children}
       {error && (
-        <span className="mt-1 text-xs font-bold text-red-400">{error}</span>
+        <span className="mt-2 text-sm font-bold text-red-400 flex items-center gap-1.5">
+          <span>⚠️</span>
+          {error}
+        </span>
       )}
     </div>
   );
@@ -631,7 +670,7 @@ function BooleanQuestion({
               key={opt.label}
               type="button"
               onClick={() => onChange(opt.val)}
-              className={`flex-1 rounded-md border-2 px-5 py-3 text-sm font-bold transition-colors ${
+              className={`flex-1 rounded-md border-2 px-4 py-4 text-base font-bold transition-colors ${
                 selected
                   ? "border-brand bg-brand text-ink"
                   : "border-white/15 bg-[#0d0d0f] text-white/70 hover:border-white/40"
