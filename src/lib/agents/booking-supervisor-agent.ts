@@ -15,6 +15,7 @@ import {
   whatsappAppointmentReminder,
   whatsappAppointmentConfirmation,
 } from '@/lib/whatsapp/whatsappMessages';
+import { whatsappService } from '@/lib/whatsapp/whatsapp-service';
 import type { Booking } from '@/lib/bookings/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -157,7 +158,7 @@ function determineActions(booking: Booking): AgentAction[] {
 }
 
 /**
- * Main agent run: analyze bookings and log messages
+ * Main agent run: analyze bookings and queue WhatsApp messages
  */
 export async function runBookingSupervisorAgent(): Promise<AgentRunResult> {
   const startTime = new Date().toISOString();
@@ -213,26 +214,45 @@ export async function runBookingSupervisorAgent(): Promise<AgentRunResult> {
       allActions.push(...actions);
     }
 
-    // 3. Log messages for each action
-    let messagesLogged = 0;
+    // 3. Queue WhatsApp messages for each action (Phase 22-2)
+    let messagesQueued = 0;
 
     if (allActions.length > 0) {
-      const messagesToLog = allActions.map((action) => ({
-        booking_id: action.booking_id,
-        direction: 'outbound' as const,
-        message_text: action.message_text,
-        channel: action.message_channel,
-      }));
+      for (const action of allActions) {
+        try {
+          const booking = typedBookings.find(b => b.id === action.booking_id);
+          if (!booking || !booking.phone) {
+            errors.push(`Booking ${action.booking_id} has no phone number`);
+            continue;
+          }
 
-      const { error: insertError, data: inserted } = await supabase
-        .from('booking_messages')
-        .insert(messagesToLog)
-        .select();
+          // Queue message via WhatsApp service (Phase 22-2)
+          const queuedMsg = await whatsappService.queueMessage(
+            action.booking_id,
+            booking.phone,
+            action.message_text
+          );
 
-      if (insertError) {
-        errors.push(`Failed to log messages: ${insertError.message}`);
-      } else {
-        messagesLogged = inserted?.length || 0;
+          // Also log to booking_messages for audit trail (backward compat)
+          await supabase
+            .from('booking_messages')
+            .insert({
+              booking_id: action.booking_id,
+              direction: 'outbound',
+              message_text: action.message_text,
+              channel: action.message_channel,
+              whatsapp_message_id: queuedMsg.id,
+              whatsapp_status: 'queued',
+            });
+
+          messagesQueued++;
+
+          // Simulate delivery after 3 seconds (Phase 22-2)
+          await whatsappService.simulateDelivery(queuedMsg.id, 3000);
+        } catch (queueError) {
+          const errorMsg = queueError instanceof Error ? queueError.message : String(queueError);
+          errors.push(`Failed to queue message for ${action.booking_id}: ${errorMsg}`);
+        }
       }
 
       // 4. Log agent run in status logs
@@ -252,7 +272,7 @@ export async function runBookingSupervisorAgent(): Promise<AgentRunResult> {
               old_status: null,
               new_status: 'agent_run',
               changed_by: adminUser.id,
-              note: `Booking Supervisor Agent ran automatically. Analyzed ${typedBookings.length} bookings, identified ${allActions.length} actions, logged ${messagesLogged} messages.`,
+              note: `Booking Supervisor Agent ran automatically. Analyzed ${typedBookings.length} bookings, identified ${allActions.length} actions, queued ${messagesQueued} WhatsApp messages.`,
             });
         }
       } catch (logError) {
@@ -266,7 +286,7 @@ export async function runBookingSupervisorAgent(): Promise<AgentRunResult> {
       timestamp: startTime,
       bookings_analyzed: typedBookings.length,
       actions_identified: allActions.length,
-      messages_logged: messagesLogged,
+      messages_logged: messagesQueued,
       actions: allActions,
     };
   } catch (error) {
