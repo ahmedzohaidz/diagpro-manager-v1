@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { randomUUID } from 'crypto';
 
 // Configuration
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -16,6 +17,22 @@ const DOCUMENT_TYPES = [
   'recommendation',
   'service_record',
 ];
+
+const STORAGE_BUCKET = 'customer-documents';
+
+// Sanitize filename: remove special chars, keep safe chars only
+function sanitizeFilename(filename: string): string {
+  return filename
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/_{2,}/g, '_')
+    .substring(0, 255);
+}
+
+// Generate safe storage path
+function generateStoragePath(customerId: string, documentId: string, originalFilename: string): string {
+  const safeFilename = sanitizeFilename(originalFilename);
+  return `customers/${customerId}/documents/${documentId}/${safeFilename}`;
+}
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies();
@@ -219,10 +236,32 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Store metadata in database (file_url and storage_path will be null for now)
+    // Generate document ID first (will be used for storage path)
+    const documentId = randomUUID();
+    const storagePath = generateStoragePath(customer_id, documentId, file.name);
+
+    // Upload file to Storage BEFORE creating database record (prevent orphan records)
+    const fileBuffer = await file.arrayBuffer();
+    const { error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, fileBuffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      return NextResponse.json(
+        { status: 'error', message: 'فشل تحميل الملف إلى التخزين. يرجى المحاولة مجددًا.' },
+        { status: 500 }
+      );
+    }
+
+    // Store metadata in database (only after successful file upload)
     const { data: document, error: dbError } = await supabase
       .from('customer_documents')
       .insert({
+        id: documentId,
         customer_id,
         document_type,
         title,
@@ -230,8 +269,8 @@ export async function POST(request: NextRequest) {
         booking_id: booking_id || null,
         work_order_id: work_order_id || null,
         vehicle_id: vehicle_id || null,
-        file_url: null, // Will be filled in Phase 20C-2
-        storage_path: null, // Will be filled in Phase 20C-2
+        file_url: null, // For future use with signed URLs
+        storage_path: storagePath, // Path in Storage bucket
         original_filename: file.name,
         file_size_bytes: file.size,
         mime_type: file.type,
@@ -242,9 +281,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (dbError) {
+      // If database insert fails, try to clean up uploaded file
       console.error('Database error:', dbError);
+      await supabase.storage
+        .from(STORAGE_BUCKET)
+        .remove([storagePath])
+        .catch((cleanupError) => console.error('Storage cleanup error:', cleanupError));
+
       return NextResponse.json(
-        { status: 'error', message: 'خطأ في حفظ المستند في قاعدة البيانات' },
+        { status: 'error', message: 'خطأ في حفظ بيانات المستند. تم حذف الملف المرفوع.' },
         { status: 500 }
       );
     }
