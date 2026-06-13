@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "diagpro": "node scripts/diagpro-cli.js",
+    "diagpro:migration": "node scripts/diagpro-cli.js generate:migration",
+    "diagpro:component": "node scripts/diagpro-cli.js generate:component",
+    "diagpro:test": "node scripts/diagpro-cli.js generate:test",
+    "diagpro:validate": "node scripts/diagpro-cli.js validate",
+    "diagpro:help": "node scripts/diagpro-cli.js help"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
