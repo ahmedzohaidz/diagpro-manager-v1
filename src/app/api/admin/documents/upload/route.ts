@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
     const document_type = formData.get('document_type') as string;
     const title = formData.get('title') as string;
     const summary = formData.get('summary') as string | null;
+    const booking_id = formData.get('booking_id') as string | null;
     const work_order_id = formData.get('work_order_id') as string | null;
     const vehicle_id = formData.get('vehicle_id') as string | null;
 
@@ -167,33 +168,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify work_order if provided
+    // Verify work_order if provided (must belong to same customer)
     if (work_order_id) {
       const { data: workOrder } = await supabase
         .from('work_orders')
-        .select('id')
+        .select('id, customer_id')
         .eq('id', work_order_id)
+        .eq('customer_id', customer_id)
         .single();
 
       if (!workOrder) {
         return NextResponse.json(
-          { status: 'error', message: 'أمر العمل غير موجود' },
+          { status: 'error', message: 'أمر العمل تابع لعميل آخر أو غير موجود' },
           { status: 400 }
         );
       }
     }
 
-    // Verify vehicle if provided
+    // Verify vehicle if provided (must belong to same customer)
     if (vehicle_id) {
       const { data: vehicle } = await supabase
         .from('vehicles')
-        .select('id')
+        .select('id, customer_id')
         .eq('id', vehicle_id)
+        .eq('customer_id', customer_id)
         .single();
 
       if (!vehicle) {
         return NextResponse.json(
-          { status: 'error', message: 'السيارة غير موجودة' },
+          { status: 'error', message: 'السيارة تابعة لعميل آخر أو غير موجودة' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Verify booking if provided (must belong to same customer)
+    if (booking_id) {
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('id, customer_id')
+        .eq('id', booking_id)
+        .eq('customer_id', customer_id)
+        .single();
+
+      if (!booking) {
+        return NextResponse.json(
+          { status: 'error', message: 'الحجز تابع لعميل آخر أو غير موجود' },
           { status: 400 }
         );
       }
@@ -207,6 +227,7 @@ export async function POST(request: NextRequest) {
         document_type,
         title,
         summary: summary || null,
+        booking_id: booking_id || null,
         work_order_id: work_order_id || null,
         vehicle_id: vehicle_id || null,
         file_url: null, // Will be filled in Phase 20C-2
@@ -231,7 +252,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         status: 'success',
-        message: 'تم تحميل المستند بنجاح (الملف سيكون متاحاً في المرحلة 20C-2)',
+        message: 'تم تسجيل بيانات المستند بنجاح، وسيتم تفعيل حفظ الملف في Phase 20C-2',
         document_id: document.id,
       },
       { status: 201 }
