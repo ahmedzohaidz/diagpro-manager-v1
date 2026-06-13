@@ -1,0 +1,197 @@
+{
+  "workflows": {
+    "phase_20B_2": {
+      "name": "Phase 20B-2: Admin Document List UI",
+      "description": "Create admin interface for managing customer documents",
+      "steps": [
+        {
+          "step": 1,
+          "task": "Create /admin/documents/page.tsx",
+          "prompt_file": "PROMPTS.md#Phase_20B-2",
+          "estimated_time": "45 minutes"
+        },
+        {
+          "step": 2,
+          "task": "Create DocumentTable component",
+          "depends_on": 1,
+          "estimated_time": "30 minutes"
+        },
+        {
+          "step": 3,
+          "task": "Add filters (customer, type, visibility)",
+          "depends_on": 2,
+          "estimated_time": "30 minutes"
+        },
+        {
+          "step": 4,
+          "task": "Test: admin access + RLS verification",
+          "depends_on": 3,
+          "estimated_time": "20 minutes"
+        },
+        {
+          "step": 5,
+          "task": "Commit: Phase 20B-2",
+          "commit_template": "PROMPTS.md#Git_Commit_Template",
+          "depends_on": 4,
+          "estimated_time": "5 minutes"
+        }
+      ],
+      "total_time": "130 minutes",
+      "checkpoints": [
+        "Admin can view all documents",
+        "Filters work correctly",
+        "Toggle visible = true → RLS updates",
+        "No file upload (placeholder only)"
+      ]
+    },
+    "phase_20B_3": {
+      "name": "Phase 20B-3: Customer Document Portal",
+      "description": "Customer read-only view of visible documents",
+      "steps": [
+        {
+          "step": 1,
+          "task": "Create /customer/documents/page.tsx",
+          "prompt_file": "PROMPTS.md#Phase_20B-3",
+          "estimated_time": "45 minutes"
+        },
+        {
+          "step": 2,
+          "task": "Reuse customer layout pattern",
+          "depends_on": 1,
+          "estimated_time": "15 minutes"
+        },
+        {
+          "step": 3,
+          "task": "Add RLS-aware query (customer_id filtering)",
+          "depends_on": 2,
+          "estimated_time": "20 minutes"
+        },
+        {
+          "step": 4,
+          "task": "Test: RLS enforcement (can't see other customer docs)",
+          "depends_on": 3,
+          "estimated_time": "30 minutes"
+        },
+        {
+          "step": 5,
+          "task": "Commit: Phase 20B-3",
+          "depends_on": 4,
+          "estimated_time": "5 minutes"
+        }
+      ],
+      "total_time": "115 minutes",
+      "checkpoints": [
+        "Customer sees only own documents",
+        "customer_visible = false → hidden",
+        "customer_visible = true → visible",
+        "No admin fields exposed",
+        "RLS blocks access to other customers"
+      ]
+    },
+    "phase_20C_1": {
+      "name": "Phase 20C-1: File Upload Validation",
+      "description": "Validate and store file metadata (no Storage yet)",
+      "steps": [
+        {
+          "step": 1,
+          "task": "Create API route: /api/admin/documents/upload",
+          "prompt_file": "PROMPTS.md#Phase_20C-1",
+          "estimated_time": "60 minutes"
+        },
+        {
+          "step": 2,
+          "task": "Add file type validation ([pdf, jpg, png])",
+          "depends_on": 1,
+          "estimated_time": "15 minutes"
+        },
+        {
+          "step": 3,
+          "task": "Add file size validation (max 50MB)",
+          "depends_on": 2,
+          "estimated_time": "10 minutes"
+        },
+        {
+          "step": 4,
+          "task": "Store metadata in customer_documents",
+          "depends_on": 3,
+          "estimated_time": "20 minutes"
+        },
+        {
+          "step": 5,
+          "task": "Test: upload valid/invalid files, verify metadata",
+          "depends_on": 4,
+          "estimated_time": "30 minutes"
+        },
+        {
+          "step": 6,
+          "task": "Test: RLS enforcement (admin only)",
+          "depends_on": 5,
+          "estimated_time": "15 minutes"
+        },
+        {
+          "step": 7,
+          "task": "Commit: Phase 20C-1",
+          "depends_on": 6,
+          "estimated_time": "5 minutes"
+        }
+      ],
+      "total_time": "155 minutes",
+      "checkpoints": [
+        "Valid files stored with metadata",
+        "Invalid types rejected (400)",
+        "Files > 50MB rejected (413)",
+        "Non-admin rejected (403)",
+        "file_url = null, storage_path = null (will fill Phase 20C-2)"
+      ]
+    }
+  },
+  "git_workflow": {
+    "branch": "codex-mobile-booking-ui",
+    "strategy": "atomic-commits",
+    "sequence": [
+      {
+        "commit": 1,
+        "message": "Phase 20B-2: Admin document list UI",
+        "files": [
+          "src/app/admin/documents/page.tsx",
+          "src/components/admin/DocumentTable.tsx",
+          "src/lib/documents.ts"
+        ]
+      },
+      {
+        "commit": 2,
+        "message": "Phase 20B-3: Customer document portal (read-only)",
+        "files": [
+          "src/app/customer/documents/page.tsx",
+          "src/components/customer/DocumentList.tsx"
+        ]
+      },
+      {
+        "commit": 3,
+        "message": "Phase 20C-1: File upload validation & metadata storage",
+        "files": [
+          "src/app/api/admin/documents/upload/route.ts",
+          "src/lib/documents/upload.ts",
+          "src/lib/documents/validation.ts"
+        ]
+      }
+    ]
+  },
+  "testing_strategy": {
+    "unit_tests": [
+      "File validation logic",
+      "Document query builders",
+      "RLS helpers"
+    ],
+    "integration_tests": [
+      "Admin upload → metadata stored",
+      "Customer visibility toggle → RLS updates",
+      "Cross-customer RLS blocking"
+    ],
+    "e2e_tests": [
+      "Admin: list → filter → toggle visible",
+      "Customer: login → view own docs",
+      "Admin: upload → customer sees (if visible)"
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "name": "mcp-diagpro-builder",
+  "description": "DiagPro Manager V1 — Schema generator, RLS policy creator, component generator",
+  "version": "1.0.0",
+  "type": "stdio",
+  "command": "node",
+  "args": ["mcp-diagpro-builder.js"],
+  "tools": [
+    {
+      "name": "generate_migration",
+      "description": "Generate SQL migration from CLAUDE.md specification",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "description": "Phase number e.g., '20C-1'",
+            "examples": ["20C-1", "21", "22"]
+          },
+          "table_name": {
+            "type": "string",
+            "description": "Table to generate",
+            "examples": ["customer_documents", "booking_messages"]
+          },
+          "fields": {
+            "type": "array",
+            "description": "Fields with types and constraints",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string", "enum": ["uuid", "text", "integer", "boolean", "timestamptz", "date", "time"] },
+                "required": { "type": "boolean" },
+                "default": { "type": "string" },
+                "references": { "type": "string", "description": "For FK: table(column)" }
+              },
+              "required": ["name", "type"]
+            }
+          },
+          "indexes": {
+            "type": "array",
+            "description": "Index definitions",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["phase", "table_name", "fields"]
+      }
+    },
+    {
+      "name": "generate_rls_policies",
+      "description": "Generate RLS policies from role-based access spec",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table_name": { "type": "string" },
+          "admin_access": { "type": "array", "items": { "enum": ["select", "insert", "update", "delete"] } },
+          "customer_access": { "type": "array", "items": { "enum": ["select", "insert", "update"] } },
+          "staff_access": { "type": "array", "items": { "enum": ["select", "insert", "update", "delete"] } },
+          "anon_access": { "type": "array", "items": { "enum": ["select"] } }
+        },
+        "required": ["table_name", "admin_access"]
+      }
+    },
+    {
+      "name": "generate_component",
+      "description": "Generate React component from spec",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "component_name": { "type": "string", "examples": ["DocumentUploader", "DocumentTable"] },
+          "component_type": { "enum": ["page", "form", "table", "card", "modal"] },
+          "fields": { "type": "array", "items": { "type": "string" } },
+          "rls_aware": { "type": "boolean", "description": "Add RLS query logic" },
+          "arabic": { "type": "boolean", "default": true }
+        },
+        "required": ["component_name", "component_type"]
+      }
+    },
+    {
+      "name": "generate_test",
+      "description": "Generate test scenario for feature",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scenario": { "type": "string", "examples": ["admin_uploads_document", "customer_views_own_documents"] },
+          "phase": { "type": "string" },
+          "test_framework": { "enum": ["vitest", "jest"], "default": "vitest" }
+        },
+        "required": ["scenario", "phase"]
+      }
+    },
+    {
+      "name": "validate_spec",
+      "description": "Validate phase spec against CLAUDE.md",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "phase": { "type": "string" },
+          "spec": { "type": "object" }
+        },
+        "required": ["phase", "spec"]
+      }
+    }
+  ]
+}
