@@ -227,25 +227,59 @@ export default function HomePage() {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-      {/* Sticky Header */}
-      <header className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md ${darkMode ? 'bg-black/80 border-b border-gray-800' : 'bg-white/80 border-b border-gray-200'}`}
+      {/* Top Navigation Bar */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md ${darkMode ? 'bg-black/90 border-b border-gray-800' : 'bg-white/90 border-b border-gray-200'}`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
+          {/* Logo/Title */}
+          <div className="text-right flex-1">
+            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-brand to-yellow-300 bg-clip-text text-transparent">
+              🏥 ديجينو
+            </h1>
+          </div>
+
+          {/* Navigation Menu */}
+          <div className="flex gap-2 sm:gap-4 items-center">
+            <Link href="/">
+              <Button className={`text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg transition-all ${darkMode ? 'hover:bg-gray-800 text-white' : 'hover:bg-gray-100 text-black'}`}>
+                👤 العميل
+              </Button>
+            </Link>
+            <Link href="/admin/bookings">
+              <Button className={`text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg transition-all ${darkMode ? 'hover:bg-gray-800 text-white' : 'hover:bg-gray-100 text-black'}`}>
+                ⚙️ الإدارة
+              </Button>
+            </Link>
+            <Link href="/blog">
+              <Button className={`text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg transition-all ${darkMode ? 'hover:bg-gray-800 text-white' : 'hover:bg-gray-100 text-black'}`}>
+                📝 مدونة
+              </Button>
+            </Link>
+            <Link href="/suggestions">
+              <Button className={`text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg transition-all ${darkMode ? 'hover:bg-gray-800 text-white' : 'hover:bg-gray-100 text-black'}`}>
+                💡 اقتراحات
+              </Button>
+            </Link>
+
+            {/* Theme Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
           </div>
-          <Link href="/book">
-            <Button className="bg-brand hover:bg-yellow-500 text-black font-bold">
-              📅 احجز الآن
-            </Button>
-          </Link>
+
+          {/* Book Now Button */}
+          <div className="hidden sm:flex ml-4">
+            <Link href="/book">
+              <Button className="bg-brand hover:bg-yellow-500 text-black font-bold px-4 py-2 rounded-lg">
+                📅 احجز
+              </Button>
+            </Link>
+          </div>
         </div>
-      </header>
+      </nav>
 
       {/* Hero Section */}
       <section className="relative w-full pt-28 pb-12 px-4 sm:px-8 bg-gradient-to-b from-gray-900 via-black to-black overflow-hidden">
