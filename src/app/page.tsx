@@ -283,19 +283,6 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative w-full pt-28 pb-12 px-4 sm:px-8 bg-gradient-to-b from-gray-900 via-black to-black overflow-hidden">
-        {/* Background Car Image */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-15">
-          <img
-            src="/images/diagnostic-car.svg"
-            alt="Professional Diagnostic Car"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-black opacity-80"></div>
-
-        {/* Glow Effects */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-brand rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600 rounded-full blur-3xl"></div>
@@ -304,23 +291,13 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-right mb-12 animate-fade-in">
-            <div className="inline-block bg-brand/20 border border-brand/50 rounded-full px-6 py-3 text-brand font-bold text-sm mb-6 animate-pulse">
-              ✨ عروض احترافية حصرية
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-brand via-yellow-300 to-brand bg-clip-text text-transparent">
-              فحص ذكي احترافي
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4 bg-gradient-to-r from-brand to-yellow-300 bg-clip-text text-transparent">
+              عروضنا الحالية
             </h1>
-
-            <p className="text-lg sm:text-xl text-gray-300 mb-8 max-w-2xl text-right">
-              أجهزة تشخيص حديثة • فنيون متخصصون • تقارير دقيقة 100%
-            </p>
-
-            <div className="inline-block bg-brand/90 rounded-full px-8 py-4 text-black font-bold text-lg mb-8 animate-pulse shadow-lg shadow-brand/50">
-              ⏰ عروض حصرية تنتهي: 30 يونيو 2025
+            <div className="inline-block bg-brand/90 rounded-full px-6 py-3 text-black font-bold text-lg mb-6 animate-pulse">
+              ⏰ عروض حصرية لفترة محدودة!
             </div>
-
-            <div className="mt-6">
+            <div className="mt-4">
               <CountdownTimer />
             </div>
           </div>
@@ -330,7 +307,7 @@ export default function HomePage() {
             {HERO_CARDS.map((card, idx) => (
               <div
                 key={idx}
-                className="group relative bg-gradient-to-br from-gray-900/60 to-black/80 backdrop-blur-xl border border-brand/40 hover:border-brand rounded-2xl p-6 text-center transition-all duration-300 hover:shadow-2xl hover:shadow-brand/40 hover:scale-105 overflow-hidden animate-slide-up"
+                className="group relative bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-brand/30 hover:border-brand rounded-2xl p-6 text-center transition-all duration-300 hover:shadow-2xl hover:shadow-brand/20 overflow-hidden animate-slide-up"
                 style={{ animationDelay: `${idx * 50}ms` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-brand/0 to-brand/0 group-hover:from-brand/10 group-hover:to-brand/20 transition-all"></div>
@@ -381,12 +358,12 @@ export default function HomePage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in">
             <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
-              <Button className="bg-green-600 hover:bg-green-700 text-white px-10 py-4 rounded-xl font-bold text-base sm:text-lg min-h-[56px] shadow-lg hover:shadow-green-600/50 transition-all hover:scale-105 active:scale-95">
-                💬 واتساب مباشر
+              <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg min-h-[56px] shadow-lg hover:shadow-green-600/50">
+                💬 واتساب
               </Button>
             </a>
             <Link href="/book">
-              <Button className="bg-brand hover:bg-yellow-500 text-black px-10 py-4 rounded-xl font-bold text-base sm:text-lg min-h-[56px] shadow-lg shadow-brand/40 hover:shadow-brand/60 transition-all hover:scale-105 active:scale-95">
+              <Button className="bg-brand hover:bg-yellow-500 text-black px-8 py-4 rounded-xl font-bold text-lg min-h-[56px] shadow-lg hover:shadow-brand/50">
                 📅 احجز الآن
               </Button>
             </Link>
