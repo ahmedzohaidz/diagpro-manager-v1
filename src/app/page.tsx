@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/Button";
 import { buildGeneralWhatsAppLink } from "@/lib/bookings/whatsapp";
 import { NavigationDrawer } from "@/components/layout/NavigationDrawer";
 import {
@@ -26,6 +25,10 @@ import {
   MoreHorizontal,
   Stethoscope,
   Wrench,
+  Lightbulb,
+  Wind,
+  Gauge,
+  Radio,
 } from "lucide-react";
 
 const WHATSAPP_LINK = buildGeneralWhatsAppLink(
@@ -35,14 +38,9 @@ const WHATSAPP_LINK = buildGeneralWhatsAppLink(
 // Trust Cards
 const TRUST_CARDS = [
   {
-    icon: ClipboardCheck,
-    title: "تقرير رقمي",
-    subtitle: "تقرير شامل فوري وآمن",
-  },
-  {
-    icon: Cpu,
-    title: "أحدث الأجهزة",
-    subtitle: "تقنيات حديثة ودقة عالية",
+    icon: ShieldCheck,
+    title: "شفافية",
+    subtitle: "تقرير واضح وأسعار عادلة",
   },
   {
     icon: Award,
@@ -50,53 +48,74 @@ const TRUST_CARDS = [
     subtitle: "فنيون متخصصون ومدربون",
   },
   {
-    icon: ShieldCheck,
-    title: "شفافية",
-    subtitle: "تقرير واضح وأسعار عادلة",
+    icon: Cpu,
+    title: "أحدث الأجهزة",
+    subtitle: "تقنيات حديثة ودقة عالية",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "تقرير رقمي",
+    subtitle: "تقرير شامل فوري وآمن",
   },
 ];
 
 // Services
 const SERVICES = [
   {
-    icon: Laptop,
-    title: "فحص شامل كمبيوتر",
-    href: "/book",
-  },
-  {
-    icon: KeyRound,
-    title: "برمجة المفاتيح والريموت",
-    href: "/book",
+    icon: Lightbulb,
+    title: "تشخيص أعطال الكهرباء المتقدمة",
+    subtitle: "فحص دقيق لأنظمة الكهرباء",
+    time: "30-60 دقيقة",
+    badge: "تشخيص",
   },
   {
     icon: Cpu,
     title: "برمجة وحدات التحكم ECU",
-    href: "/book",
+    subtitle: "برمجة وحدات التحكم والمفاتيح",
+    time: "60-120 دقيقة",
+    badge: "برمجة",
   },
   {
-    icon: Zap,
-    title: "تشخيص أعطال الكهرباء المتقدمة",
-    href: "/book",
+    icon: KeyRound,
+    title: "برمجة المفاتيح والريموت",
+    subtitle: "برمجة جميع أنواع المفاتيح والأجهزة",
+    time: "20-40 دقيقة",
+    badge: "برمجة",
   },
   {
-    icon: Radar,
+    icon: Laptop,
+    title: "فحص شامل كمبيوتر",
+    subtitle: "فحص كامل لجميع أنظمة السيارة",
+    time: "30-60 دقيقة",
+    badge: "تشخيص",
+  },
+  {
+    icon: Radio,
     title: "فحص الحساسات والأنظمة الإلكترونية",
-    href: "/book",
+    subtitle: "فحص جميع الحساسات والأنظمة",
+    time: "45-90 دقيقة",
+    badge: "كهرباء",
   },
   {
     icon: BatteryCharging,
     title: "فحص نظام الشحن والبطارية",
-    href: "/book",
+    subtitle: "فحص أداء البطارية والشحن",
+    time: "20-30 دقيقة",
+    badge: "صيانة",
   },
   {
     icon: AlertCircle,
     title: "فحص وبرمجة نظام الوسائد الهوائية",
-    href: "/book",
+    subtitle: "فحص ورمجة الوسائد الهوائية",
+    time: "30-45 دقيقة",
+    badge: "برمجة",
   },
   {
-    icon: Disc3,
+    icon: Gauge,
     title: "فحص وبرمجة نظام ABS",
-    href: "/book",
+    subtitle: "فحص ورمجة نظام الفرامل",
+    time: "30-60 دقيقة",
+    badge: "برمجة",
   },
 ];
 
@@ -198,65 +217,60 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-16 pb-6 px-4 bg-black relative">
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 opacity-5">
-          <div className="w-64 h-64 bg-brand rounded-full blur-3xl"></div>
-        </div>
-
+      <section className="pt-20 pb-8 px-4 bg-black relative">
         <div className="relative max-w-[430px] mx-auto">
-          {/* Hero Content */}
-          <div className="text-right mb-8">
-            <h2 className="text-3xl font-extrabold mb-4 leading-tight">
-              <span className="block">تشخيص دقيق</span>
-              <span className="block">وبرمجة احترافية</span>
-            </h2>
-
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-              لكهرباء السيارات الحديثة
-            </p>
-
-            <p className="text-xs text-gray-500 mb-8 leading-relaxed">
-              نستخدم أحدث أجهزة الفحص والبرمجة المتقدمة بدقة عالية لضمان
-              تشغيل مثالي لسيارتك.
-            </p>
-
-            {/* Buttons */}
-            <div className="flex flex-col gap-3 mb-6">
-              <Link href="/book" className="w-full">
-                <button className="w-full bg-brand hover:bg-yellow-500 text-black font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
-                  <CalendarDays size={20} />
-                  احجز الآن
-                </button>
-              </Link>
-
-              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="w-full">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
-                  <span>💬</span>
-                  واتساب
-                </button>
-              </a>
+          <div className="space-y-6">
+            {/* Hero Image - Left Side */}
+            <div className="bg-gradient-to-br from-gray-800 to-black rounded-xl h-56 flex items-center justify-center border border-gray-700 mb-6">
+              <div className="text-center">
+                <Car size={56} className="text-brand mx-auto mb-2" />
+                <p className="text-xs text-gray-400">ورشة احترافية</p>
+              </div>
             </div>
 
-            {/* Quick Info */}
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-400 border border-gray-800 rounded-lg p-3">
-              <Clock size={16} />
-              <span>فحص ذكي خلال 15 دقيقة</span>
-            </div>
-          </div>
+            {/* Hero Content - Right Side */}
+            <div className="text-right space-y-4">
+              <h2 className="text-2xl font-extrabold leading-tight">
+                <span className="block text-white">تشخيص دقيق</span>
+                <span className="block text-brand">وبرمجة احترافية</span>
+              </h2>
 
-          {/* Hero Image Placeholder */}
-          <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl h-48 flex items-center justify-center mb-8 border border-gray-800">
-            <div className="text-center">
-              <Wrench size={48} className="text-brand mx-auto mb-2" />
-              <p className="text-xs text-gray-500">ورشة احترافية</p>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                لكهرباء السيارات الحديثة
+              </p>
+
+              <p className="text-xs text-gray-400 leading-relaxed">
+                نستخدم أحدث أجهزة الفحص والبرمجة المتقدمة بدقة عالية لضمان تشغيل مثالي لسيارتك.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex flex-col gap-3 pt-2">
+                <Link href="/book" className="w-full">
+                  <button className="w-full bg-brand hover:bg-yellow-500 text-black font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <CalendarDays size={20} />
+                    احجز الآن
+                  </button>
+                </Link>
+
+                <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="w-full">
+                  <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    💬 واتساب
+                  </button>
+                </a>
+              </div>
+
+              {/* Quick Info */}
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-300 border border-yellow-600/50 rounded-lg p-3 bg-yellow-600/5 mt-2">
+                <Clock size={16} className="text-brand" />
+                <span>فحص ذكي خلال 15 دقيقة</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Trust Cards Section */}
-      <section className="px-4 py-6 bg-black">
+      <section className="px-4 py-8 bg-black">
         <div className="max-w-[430px] mx-auto">
           <div className="grid grid-cols-4 gap-3">
             {TRUST_CARDS.map((card, idx) => {
@@ -264,11 +278,11 @@ export default function HomePage() {
               return (
                 <div
                   key={idx}
-                  className="bg-gray-900 border border-gray-800 rounded-lg p-3 text-center"
+                  className="bg-black border border-gray-700 rounded-lg p-4 text-center hover:border-gray-600 transition-colors"
                 >
-                  <Icon size={24} className="text-white mx-auto mb-2" />
-                  <h3 className="text-xs font-bold text-brand mb-1">{card.title}</h3>
-                  <p className="text-[10px] text-gray-400">{card.subtitle}</p>
+                  <Icon size={28} className="text-brand mx-auto mb-3" />
+                  <h3 className="text-xs font-bold text-brand mb-2">{card.title}</h3>
+                  <p className="text-[10px] text-gray-400 leading-tight">{card.subtitle}</p>
                 </div>
               );
             })}
@@ -277,30 +291,51 @@ export default function HomePage() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="px-4 py-6 bg-black">
-        <div className="max-w-[430px] mx-auto">
+      <section className="px-4 py-8 bg-black">
+        <div className="max-w-[430px] mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/services" className="text-xs text-gray-400 hover:text-brand flex items-center gap-1">
-              عرض الكل
+          <div className="flex items-center justify-between">
+            <Link href="/services" className="text-xs text-yellow-500 hover:text-yellow-400 flex items-center gap-1">
               <span>←</span>
+              عرض الكل
             </Link>
-            <h2 className="text-lg font-bold">خدماتنا الرئيسية</h2>
+            <h2 className="text-lg font-bold text-right">خدماتنا الرئيسية</h2>
           </div>
 
-          {/* Services Grid */}
-          <div className="grid grid-cols-4 gap-3">
+          {/* Services Grid - 4 Columns x 2 Rows */}
+          <div className="grid grid-cols-2 gap-4">
             {SERVICES.map((service, idx) => {
               const Icon = service.icon;
               return (
-                <Link key={idx} href={service.href}>
-                  <div className="bg-white rounded-lg p-3 text-center hover:shadow-lg transition-shadow h-full flex flex-col items-center justify-between">
-                    <Icon size={28} className="text-black mb-2" />
-                    <h3 className="text-[11px] font-bold text-black text-center leading-tight line-clamp-3 mb-2">
+                <Link key={idx} href="/book">
+                  <div className="bg-white rounded-lg p-4 h-full hover:shadow-lg transition-shadow flex flex-col">
+                    {/* Badge */}
+                    <div className="text-[10px] font-bold text-gray-600 mb-2">
+                      {service.badge}
+                    </div>
+
+                    {/* Icon */}
+                    <Icon size={32} className="text-black mb-3 mx-auto" />
+
+                    {/* Title */}
+                    <h3 className="text-sm font-bold text-black text-center mb-2 line-clamp-2">
                       {service.title}
                     </h3>
-                    <button className="bg-brand hover:bg-yellow-500 text-black text-xs font-bold py-1 px-2 rounded transition-colors">
-                      احجز
+
+                    {/* Description */}
+                    <p className="text-xs text-gray-600 text-center mb-3 line-clamp-2">
+                      {service.subtitle}
+                    </p>
+
+                    {/* Time */}
+                    <div className="flex items-center justify-center gap-1 text-xs text-gray-700 mb-3">
+                      <Clock size={12} />
+                      {service.time}
+                    </div>
+
+                    {/* Button */}
+                    <button className="bg-brand hover:bg-yellow-500 text-black text-xs font-bold py-2 rounded-md transition-colors mt-auto">
+                      احجز الآن
                     </button>
                   </div>
                 </Link>
@@ -311,18 +346,18 @@ export default function HomePage() {
       </section>
 
       {/* Service Journey Section */}
-      <section className="px-4 py-6 bg-black">
-        <div className="max-w-[430px] mx-auto">
-          <h2 className="text-lg font-bold mb-6 text-right">رحلة خدمتك معنا</h2>
+      <section className="px-4 py-8 bg-black">
+        <div className="max-w-[430px] mx-auto space-y-6">
+          <h2 className="text-lg font-bold text-right">رحلة خدمتك معنا</h2>
 
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <div className="flex gap-3 overflow-x-auto pb-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <div className="flex gap-2 justify-center items-center flex-wrap">
               {SERVICE_JOURNEY.map((step, idx) => {
                 const Icon = step.icon;
                 return (
-                  <div key={idx} className="flex flex-col items-center flex-shrink-0">
+                  <div key={idx} className="flex flex-col items-center">
                     {/* Number Circle */}
-                    <div className="w-10 h-10 bg-brand rounded-full flex items-center justify-center font-bold text-black mb-2">
+                    <div className="w-12 h-12 bg-brand rounded-full flex items-center justify-center font-bold text-black mb-2">
                       {step.number}
                     </div>
 
@@ -330,13 +365,13 @@ export default function HomePage() {
                     <Icon size={20} className="text-white mb-2" />
 
                     {/* Title */}
-                    <p className="text-[10px] text-white text-center w-20 leading-tight">
+                    <p className="text-[10px] text-white text-center w-16 leading-tight">
                       {step.title}
                     </p>
 
                     {/* Arrow (except for last) */}
                     {idx < SERVICE_JOURNEY.length - 1 && (
-                      <div className="text-gray-600 text-lg mt-2">←</div>
+                      <div className="text-gray-600 text-xl mt-2">←</div>
                     )}
                   </div>
                 );
@@ -347,7 +382,7 @@ export default function HomePage() {
       </section>
 
       {/* Bottom Spacing - Extra padding for BottomNav */}
-      <div className="h-32" />
+      <div className="h-36" />
 
       {/* Bottom Navigation */}
       <BottomNav />
