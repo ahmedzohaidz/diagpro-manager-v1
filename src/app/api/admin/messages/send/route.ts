@@ -24,7 +24,7 @@ async function createSupabaseServerClient() {
 }
 
 async function is_admin(): Promise<boolean> {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return false;

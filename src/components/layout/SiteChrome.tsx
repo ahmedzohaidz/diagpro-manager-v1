@@ -20,10 +20,13 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  // Skip SiteHeader on home page (/)
+  const skipHeader = pathname === "/";
+
   return (
     <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 pb-24 md:pb-8">
+      {!skipHeader && <SiteHeader />}
+      <main className={skipHeader ? "w-full pb-[120px]" : "mx-auto w-full max-w-[430px] px-4 py-6 pb-[120px]"}>
         {children}
       </main>
       <BottomNav />

@@ -15,10 +15,10 @@ interface Message {
   direction: string;
   channel: string;
   created_at: string;
-  bookings: {
+  bookings: Array<{
     customer_full_name: string;
     status: string;
-  } | null;
+  }>;
 }
 
 interface ActivityData {
@@ -167,11 +167,11 @@ export default function AgentActivityDashboard() {
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
                     <td className="p-3 text-gray-800">
-                      {msg.bookings?.customer_full_name || 'غير معروف'}
+                      {msg.bookings?.[0]?.customer_full_name || 'غير معروف'}
                     </td>
                     <td className="p-3">
                       <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                        {msg.bookings?.status || 'N/A'}
+                        {msg.bookings?.[0]?.status || 'N/A'}
                       </span>
                     </td>
                     <td className="p-3">
@@ -209,7 +209,7 @@ export default function AgentActivityDashboard() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-blue-800 text-sm">
           <strong>ملاحظة:</strong> يتم تحديث لوحة التحكم تلقائياً كل 5 دقائق. يمكنك أيضاً الضغط على زر
-          "تحديث" لتحديث البيانات على الفور.
+          &quot;تحديث&quot; لتحديث البيانات على الفور.
         </p>
       </div>
     </div>

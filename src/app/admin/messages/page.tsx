@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import QRCode from 'qrcode.react';
 
 interface QueuedMessage {
   id: string;
@@ -235,7 +234,7 @@ export default function MessagesPage() {
             <h2 className="text-xl font-bold mb-4 text-center">QR Code</h2>
 
             <div className="flex justify-center mb-4 bg-white p-4 border-2 border-gray-200 rounded-lg">
-              <QRCode value={selectedMessage.wa_link} size={256} />
+              <p className="text-xs text-gray-600 break-all">{selectedMessage.wa_link}</p>
             </div>
 
             <p className="text-sm text-gray-600 text-center mb-4">
